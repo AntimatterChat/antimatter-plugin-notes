@@ -279,6 +279,7 @@ export default function NoteEditor({docId}: {docId: string}) {
                             session={session}
                             user={user}
                             editable={editable}
+                            channelId={doc.channel_id || ''}
                             onEditor={onEditor}
                         />
                     ) : <div className={cx('notes-empty')}>{'…'}</div>}

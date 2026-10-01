@@ -4,6 +4,8 @@
 // Converts a note (the JSON of its ProseMirror document, as editor.getJSON() returns it) to
 // Markdown.
 
+import {mentionUsername} from './mentions';
+
 export type PMMark = {type: string; attrs?: Record<string, unknown>};
 
 export type PMNode = {
@@ -73,7 +75,10 @@ export function inline(nodes: PMNode[] = []): string {
         }
     };
 
-    for (const node of nodes) {
+    for (const original of nodes) {
+        // Mentions are written as in messages, @username
+        const raw = original.type === 'mention';
+        const node: PMNode = raw ? {type: 'text', text: `@${mentionUsername(original.attrs?.label ?? original.attrs?.id)}`, marks: original.marks} : original;
         if (node.type === 'hardBreak') {
             closeTo(0);
             out += pendingSpace.replace(/\s+$/, '') + '\\\n';
@@ -110,7 +115,11 @@ export function inline(nodes: PMNode[] = []): string {
                 open.push(mark);
             }
         }
-        out += isCode ? codeSpan(core) : escapeText(core);
+        if (isCode) {
+            out += codeSpan(core);
+        } else {
+            out += raw ? core : escapeText(core);
+        }
     }
     closeTo(0);
     open = [];

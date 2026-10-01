@@ -5,9 +5,11 @@ import type {Extensions} from '@tiptap/core';
 import {TaskItem, TaskList} from '@tiptap/extension-list';
 import StarterKit from '@tiptap/starter-kit';
 
+import {noteMention, type MentionOptions} from './mention';
+
 // baseExtensions are the content features of notes, shared by the editor and the read-only
 // previews of past versions. Undo and redo come from the collaboration extension.
-export function baseExtensions(): Extensions {
+export function baseExtensions(mentions: MentionOptions = {}): Extensions {
     return [
         StarterKit.configure({
             undoRedo: false,
@@ -15,5 +17,6 @@ export function baseExtensions(): Extensions {
         }),
         TaskList,
         TaskItem.configure({nested: true}),
+        noteMention(mentions),
     ];
 }

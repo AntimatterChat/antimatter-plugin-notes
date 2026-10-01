@@ -126,3 +126,25 @@ input.amn-notes-title:focus { outline: none; border-color: var(--button-bg); }
 .amn-card-foot { font-size: 12px; color: rgba(var(--center-channel-color-rgb), 0.56); }
 .amn-card-actions { display: flex; gap: 6px; margin-top: 2px; }
 .amn-card-actions button { height: 28px; padding: 0 12px; border-radius: 4px; border: none; font-size: 12px; font-weight: 600; }
+
+/* Mentions, as in messages: Fusion's mention chips, or the classic UI's mention links */
+:is(.am-app, .am-layer) .am-notes-mention { color: var(--am-matter); background: var(--am-matter-soft); padding: 0 3px; border-radius: 4px; font-weight: 600; cursor: pointer; }
+:is(.am-app, .am-layer) .am-notes-mention.ProseMirror-selectednode { outline: 2px solid var(--am-matter); }
+.amn-notes-mention { color: var(--link-color); cursor: pointer; }
+.amn-notes-mention:hover { text-decoration: underline; }
+.amn-notes-mention.ProseMirror-selectednode { outline: 2px solid rgba(var(--button-bg-rgb), 0.48); border-radius: 2px; }
+
+/* The users suggested after @ */
+.am-notes-mention-popup, .amn-notes-mention-popup { position: fixed; z-index: 10000; }
+.am-layer.am-notes-mention-popup { background: none; }
+:is(.am-app, .am-layer) .am-notes-mention-list, :is(.am-app, .am-layer) .am-notes-mention-empty { min-width: 220px; max-width: 320px; padding: 6px; border-radius: 12px; background: var(--am-raise); border: 1px solid var(--am-line); box-shadow: var(--am-shadow); color: var(--am-text); font: 13.5px var(--am-font-ui); }
+:is(.am-app, .am-layer) .am-notes-mention-empty { color: var(--am-muted); padding: 8px 12px; }
+:is(.am-app, .am-layer) .am-notes-mention-item { display: flex; align-items: baseline; gap: 8px; width: 100%; padding: 6px 10px; border-radius: 7px; text-align: left; color: var(--am-text); overflow: hidden; }
+:is(.am-app, .am-layer) .am-notes-mention-item span { color: var(--am-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(.am-app, .am-layer) .am-notes-mention-item.am-on { background: var(--am-matter); color: #fff; }
+:is(.am-app, .am-layer) .am-notes-mention-item.am-on span { color: rgba(255, 255, 255, 0.8); }
+.amn-notes-mention-list, .amn-notes-mention-empty { min-width: 220px; max-width: 320px; padding: 4px 0; border-radius: 4px; background: var(--center-channel-bg); border: 1px solid rgba(var(--center-channel-color-rgb), 0.16); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); color: var(--center-channel-color); font-size: 14px; }
+.amn-notes-mention-empty { padding: 8px 16px; color: rgba(var(--center-channel-color-rgb), 0.64); }
+.amn-notes-mention-item { display: flex; align-items: baseline; gap: 8px; width: 100%; padding: 6px 16px; border: none; background: none; color: inherit; text-align: left; cursor: pointer; overflow: hidden; }
+.amn-notes-mention-item span { color: rgba(var(--center-channel-color-rgb), 0.64); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.amn-notes-mention-item.amn-on { background: rgba(var(--button-bg-rgb), 0.08); }

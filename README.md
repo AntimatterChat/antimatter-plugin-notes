@@ -13,6 +13,9 @@ or kept personal, edited by several people at once, with everyone's caret visibl
 - **Live editing.** Rich text (headings, bold, italic, strikethrough, lists, checklists, quotes,
   code, links) with the carets, selections and names of the other editors, who's editing, and the
   save status. Changes made offline are sent when the connection is back.
+- **Mentions.** Typing `@` suggests the members of the note's channel (any user for personal
+  notes); a mention shows like a mention in a message and opens the direct messages with that
+  user. Mentions are part of the note (they're exported as `@username`) and notify no one.
 - **History.** A version of each note is kept every 10 minutes or so while it's edited (the last
   20): preview and restore them from **Version history** (restoring is an edit, it can be undone).
 - **Export to Markdown**, and **Share in the channel**, which posts a card that opens the note.

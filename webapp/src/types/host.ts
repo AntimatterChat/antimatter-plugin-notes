@@ -54,5 +54,8 @@ declare global {
 
         // Set by the Antimatter web UIs before plugins load
         antimatterWebUI?: WebUI;
+
+        // The host's utilities for plugins
+        WebappUtils?: {browserHistory?: {push(path: string): void}};
     }
 }

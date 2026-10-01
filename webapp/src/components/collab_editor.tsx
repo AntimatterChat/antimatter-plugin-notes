@@ -14,6 +14,7 @@ import Icon, {type IconName} from '../ui/icon';
 import {cx, isFusionUI} from '../ui/web_ui';
 
 import {baseExtensions} from './extensions';
+import {useMentions} from './hooks';
 
 // renderCaret draws the caret of another editor: the mockup's caret with their name.
 function renderCaret(user: Record<string, unknown>) {
@@ -134,16 +135,20 @@ type Props = {
     session: NoteSession;
     user: NoteUser;
     editable: boolean;
+
+    // The channel of the note, "" for a personal note
+    channelId: string;
     onEditor: (editor: Editor | null) => void;
 };
 
 // CollabEditor is the rich text editor of a note, bound to its Yjs document, with the carets and
 // selections of the other editors.
-export default function CollabEditor({session, user, editable, onEditor}: Props) {
+export default function CollabEditor({session, user, editable, channelId, onEditor}: Props) {
     const {formatMessage} = useIntl();
+    const mentions = useMentions(channelId, formatMessage({id: 'notes.mention.none', defaultMessage: 'No one by that name'}));
     const editor = useEditor({
         extensions: [
-            ...baseExtensions(),
+            ...baseExtensions(mentions),
             Placeholder.configure({placeholder: formatMessage({id: 'notes.placeholder', defaultMessage: 'Write something, everyone in the channel sees it live…'})}),
             Collaboration.configure({document: session.ydoc, field: 'default'}),
             CollaborationCaret.configure({provider: session, user, render: renderCaret}),

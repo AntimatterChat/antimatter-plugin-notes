@@ -28,6 +28,19 @@ describe('inline', () => {
     });
 });
 
+describe('mentions', () => {
+    const mention = (label: string, ...marks: string[]): PMNode => ({type: 'mention', attrs: {id: 'u1', label}, marks: marks.map((type) => ({type}))});
+
+    test('are written as in messages', () => {
+        expect(inline([text('Ask '), mention('ada.lovelace'), text(' or '), mention('kenji_t'), text('.')])).toBe('Ask @ada.lovelace or @kenji_t.');
+    });
+
+    test('keep their marks and only the characters of usernames', () => {
+        expect(inline([mention('ada', 'bold'), text(' ok')])).toBe('**@ada** ok');
+        expect(inline([mention('ada](x) *')])).toBe('@adax');
+    });
+});
+
 describe('toMarkdown', () => {
     test('converts a note', () => {
         const doc: PMNode = {

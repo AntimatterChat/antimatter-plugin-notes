@@ -1,7 +1,7 @@
 // Copyright (c) 2026-present Antimatter contributors.
 // See LICENSE.txt for license information.
 
-import {useEffect} from 'react';
+import {useEffect, useMemo, useRef} from 'react';
 import {useDispatch, useSelector} from 'react-redux';
 import type {Dispatch} from 'redux';
 
@@ -11,8 +11,13 @@ import type {UserProfile} from '@mattermost/types/users';
 import {UserTypes} from 'mattermost-redux/action_types';
 import {Client4} from 'mattermost-redux/client';
 import {getTeammateNameDisplaySetting} from 'mattermost-redux/selectors/entities/preferences';
+import {getCurrentTeam, getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 import {getUser} from 'mattermost-redux/selectors/entities/users';
 import {displayUsername} from 'mattermost-redux/utils/user_utils';
+
+import {searchUsers} from '../client';
+
+import type {MentionOptions} from './mention';
 
 // The users to load, batched in one request. (The mattermost-redux actions would bring most of
 // mattermost-redux, and moment, in the bundle.)
@@ -54,4 +59,31 @@ export function useDisplayName(userId?: string): string {
     }, [dispatch, userId, user]);
 
     return user ? displayUsername(user, setting) : '';
+}
+
+// useMentions returns the mention features of a note's editor: users of the note's channel (or
+// of the server for personal notes) suggested after @, and mentions opening the direct messages
+// with the user, in the current team.
+export function useMentions(channelId: string, noResults: string): MentionOptions {
+    const teamId = useSelector(getCurrentTeamId);
+    const team = useSelector(getCurrentTeam);
+    const context = useRef({teamId, teamName: team?.name || '', channelId});
+    context.current = {teamId, teamName: team?.name || '', channelId};
+
+    return useMemo(() => ({
+        search: (query: string) => searchUsers(query, context.current.teamId, context.current.channelId),
+        noResults,
+        onClick: (username: string) => {
+            if (!context.current.teamName || !username) {
+                return;
+            }
+            const path = `/${context.current.teamName}/messages/@${username}`;
+            const history = window.WebappUtils?.browserHistory;
+            if (history) {
+                history.push(path);
+            } else {
+                window.location.assign(`${window.basename || ''}${path}`);
+            }
+        },
+    }), [noResults]);
 }
