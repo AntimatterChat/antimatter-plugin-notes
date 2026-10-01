@@ -4,6 +4,8 @@
  * Fusion: the mockup's classes (am-pad-wrap, am-pad-meta, am-pad-tools, am-pad, am-app-row...) are
  * styled by Fusion; these rules add what the mockup doesn't have, with Fusion's tokens.
  */
+/* Fusion shows the classic right-hand sidebar body as a block: make it give the panel its height */
+:is(.am-app, .am-layer) .sidebar-right__body:has(> .am-notes-root) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 :is(.am-app, .am-layer) .am-notes-root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 :is(.am-app, .am-layer) .am-notes-root > .am-app-panel { overflow-y: auto; }
 :is(.am-app, .am-layer) .am-notes-bar { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--am-line); }
