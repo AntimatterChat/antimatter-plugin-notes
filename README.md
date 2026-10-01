@@ -27,7 +27,9 @@ note in the plugin KV store and relays them, and the presence of the editors (Yj
 the members of the note's channel (or to its owner) with websocket events. Clients post their
 updates over HTTP, catch up on the ones they missed after a reconnection, and post a snapshot of
 the whole note when the server asks (every 100 updates or 256 KiB), which replaces the updates it
-covers.
+covers. Each user can send twenty updates and twenty caret moves a second on average (in bursts
+of 60 and 40), per server; beyond that the relay answers 429 and clients send the update again a
+moment later.
 
 The relay is shared with the whiteboard plugin: `server/relay` and `webapp/src/relay` are copied in
 both repositories and must be kept in sync.

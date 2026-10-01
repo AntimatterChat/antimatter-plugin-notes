@@ -33,6 +33,13 @@ const (
 	accessCacheTTL = 15 * time.Second
 )
 
+var (
+	// A client sends at most one update at a time, batched every 50 ms, and its caret every
+	// 100 ms: these leave room for a few open notes per user
+	updateRateLimit    = relay.RateLimit{PerSecond: 20, Burst: 60}
+	awarenessRateLimit = relay.RateLimit{PerSecond: 20, Burst: 40}
+)
+
 // Plugin implements the interface expected by the Antimatter server to communicate between the
 // server and plugin processes.
 type Plugin struct {
@@ -66,13 +73,15 @@ func (p *Plugin) OnActivate() error {
 			KeepVersions:        keepVersions,
 			VersionInterval:     versionInterval,
 		}),
-		Hub:               relay.NewHub(p.API),
-		Access:            p.access,
-		Logger:            p.API,
-		DefaultTitle:      "Untitled note",
-		MaxUpdateBytes:    maxUpdateBytes,
-		MaxSnapshotBytes:  maxSnapshotBytes,
-		MaxAwarenessBytes: maxAwarenessBytes,
+		Hub:                relay.NewHub(p.API),
+		Access:             p.access,
+		Logger:             p.API,
+		DefaultTitle:       "Untitled note",
+		MaxUpdateBytes:     maxUpdateBytes,
+		MaxSnapshotBytes:   maxSnapshotBytes,
+		MaxAwarenessBytes:  maxAwarenessBytes,
+		UpdateRateLimit:    updateRateLimit,
+		AwarenessRateLimit: awarenessRateLimit,
 	}
 	p.router = p.newRouter()
 	return nil
