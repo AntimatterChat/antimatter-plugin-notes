@@ -13,7 +13,7 @@ import {client, events} from '../client';
 import type {Doc} from '../relay/client';
 import Icon from '../ui/icon';
 import {cx} from '../ui/web_ui';
-import {setOpenDoc} from '../ui_state';
+import {setListView, setOpenDoc, useListView} from '../ui_state';
 
 import {useDisplayName} from './hooks';
 import RelativeTime from './relative_time';
@@ -89,6 +89,7 @@ export default function NoteList({channel}: {channel?: Channel}) {
     const [channelDocs, setChannelDocs] = useState<Doc[] | null>(null);
     const [personalDocs, setPersonalDocs] = useState<Doc[] | null>(null);
     const [error, setError] = useState('');
+    const view = useListView();
 
     const loadChannel = useCallback(() => {
         if (!channelId) {
@@ -128,10 +129,51 @@ export default function NoteList({channel}: {channel?: Channel}) {
     const archived = Boolean(channel?.delete_at);
     const channelName = channel?.type === 'D' || channel?.type === 'G' ? intl.formatMessage({id: 'notes.list.conversation', defaultMessage: 'this conversation'}) : channel?.display_name;
 
+    const shown = channel ? view : 'mine';
+    const conversation = channel?.type === 'D' || channel?.type === 'G';
+
     return (
         <div className={cx('app-panel', 'notes-list')}>
-            {error && <div className={cx('notes-error')}>{error}</div>}
             {channel && (
+                <div
+                    className={cx('seg', 'notes-seg')}
+                    role='tablist'
+                >
+                    <button
+                        type='button'
+                        role='tab'
+                        aria-selected={shown === 'channel'}
+                        className={shown === 'channel' ? cx('on') : ''}
+                        onClick={() => setListView('channel')}
+                    >
+                        {conversation ? (
+                            <FormattedMessage
+                                id='notes.list.view_conversation'
+                                defaultMessage='This conversation'
+                            />
+                        ) : (
+                            <FormattedMessage
+                                id='notes.list.view_channel'
+                                defaultMessage='This channel'
+                            />
+                        )}
+                    </button>
+                    <button
+                        type='button'
+                        role='tab'
+                        aria-selected={shown === 'mine'}
+                        className={shown === 'mine' ? cx('on') : ''}
+                        onClick={() => setListView('mine')}
+                    >
+                        <FormattedMessage
+                            id='notes.list.view_mine'
+                            defaultMessage='Mine'
+                        />
+                    </button>
+                </div>
+            )}
+            {error && <div className={cx('notes-error')}>{error}</div>}
+            {shown === 'channel' && channel ? (
                 <Section
                     title={
                         <FormattedMessage
@@ -151,25 +193,26 @@ export default function NoteList({channel}: {channel?: Channel}) {
                     onCreate={() => create(false)}
                     createLabel={intl.formatMessage({id: 'notes.list.new_channel', defaultMessage: 'New note in this channel'})}
                 />
+            ) : (
+                <Section
+                    title={
+                        <FormattedMessage
+                            id='notes.list.personal'
+                            defaultMessage='Personal notes'
+                        />
+                    }
+                    docs={personalDocs}
+                    empty={
+                        <FormattedMessage
+                            id='notes.list.personal_empty'
+                            defaultMessage='Only you can see your personal notes.'
+                        />
+                    }
+                    canCreate={true}
+                    onCreate={() => create(true)}
+                    createLabel={intl.formatMessage({id: 'notes.list.new_personal', defaultMessage: 'New personal note'})}
+                />
             )}
-            <Section
-                title={
-                    <FormattedMessage
-                        id='notes.list.personal'
-                        defaultMessage='Personal notes'
-                    />
-                }
-                docs={personalDocs}
-                empty={
-                    <FormattedMessage
-                        id='notes.list.personal_empty'
-                        defaultMessage='Only you can see your personal notes.'
-                    />
-                }
-                canCreate={true}
-                onCreate={() => create(true)}
-                createLabel={intl.formatMessage({id: 'notes.list.new_personal', defaultMessage: 'New personal note'})}
-            />
         </div>
     );
 }
