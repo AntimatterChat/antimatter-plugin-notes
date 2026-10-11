@@ -28,6 +28,7 @@ const classicIcons = {
     trash: 'trash-can-outline',
     pen: 'pencil-outline',
     lock: 'lock-outline',
+    star: 'star-outline',
     hash: 'pound',
     users: 'account-multiple-outline',
 } as const;

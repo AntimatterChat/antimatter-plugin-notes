@@ -9,6 +9,7 @@ import type {SyncStatus} from '../relay/connection';
 import {cx, isFusionUI} from '../ui/web_ui';
 
 import {useDisplayName} from './hooks';
+import {useSteadyStatus} from './steady_status';
 
 function EditorChip({editor}: {editor: Editor}) {
     const name = useDisplayName(editor.userId) || editor.name;
@@ -30,6 +31,7 @@ function EditorChip({editor}: {editor: Editor}) {
 }
 
 function StatusText({status, readOnly}: {status: SyncStatus; readOnly: boolean}) {
+    const steady = useSteadyStatus(status);
     if (readOnly) {
         return (
             <FormattedMessage
@@ -38,7 +40,7 @@ function StatusText({status, readOnly}: {status: SyncStatus; readOnly: boolean})
             />
         );
     }
-    switch (status) {
+    switch (steady) {
     case 'loading':
         return (
             <FormattedMessage

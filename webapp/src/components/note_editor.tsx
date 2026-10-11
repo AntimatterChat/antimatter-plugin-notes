@@ -26,7 +26,7 @@ import CollabEditor from './collab_editor';
 import EditorsBar from './editors_bar';
 import Menu, {type MenuItem} from './menu';
 import NoteHistory from './note_history';
-import ScopeChip from './scope';
+import ScopeChip, {FavoriteButton} from './scope';
 
 function download(filename: string, text: string) {
     const url = URL.createObjectURL(new Blob([text], {type: 'text/markdown;charset=utf-8'}));
@@ -269,6 +269,7 @@ export default function NoteEditor({docId}: {docId: string}) {
                         editable={editable}
                     />
                 )}
+                <FavoriteButton doc={doc}/>
                 <ScopeChip doc={doc}/>
                 <Menu
                     label={intl.formatMessage({id: 'notes.menu', defaultMessage: 'Note actions'})}
