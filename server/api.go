@@ -4,7 +4,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -88,22 +87,12 @@ func (p *Plugin) handleShare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if message == "" {
-		message = fmt.Sprintf("Shared a note: **%s**", escapeMarkdown(doc.Title))
-	}
-	post := &model.Post{
-		UserId:    userID,
-		ChannelId: doc.ChannelID,
-		Message:   message,
-		Type:      notePostType,
-	}
-	post.AddProp("doc_id", doc.ID)
-	post.AddProp("title", doc.Title)
-
-	created, appErr := p.API.CreatePost(post)
+	created, appErr := p.API.CreatePost(sharePost(userID, doc, message))
 	if appErr != nil {
 		p.service.WriteError(w, appErr)
 		return
 	}
+	updated, _ := p.recordShared(doc, created.Id)
+	p.service.Hub.DocChanged(relay.EventDocUpdated, updated)
 	relay.WriteJSONStatus(w, http.StatusCreated, created)
 }

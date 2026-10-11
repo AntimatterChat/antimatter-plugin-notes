@@ -25,7 +25,17 @@ function NoteRow({doc}: {doc: Doc}) {
             className={cx('app-row')}
             onClick={() => setOpenDoc(doc.id)}
         >
-            <span className={cx('notes-row-ic')}><Icon name='pad'/></span>
+            <span className={cx('notes-row-ic', !doc.channel_id && 'notes-row-personal')}>
+                <Icon name='pad'/>
+                {!doc.channel_id && (
+                    <span className={cx('notes-row-lock')}>
+                        <Icon
+                            name='lock'
+                            size='xs'
+                        />
+                    </span>
+                )}
+            </span>
             <span className={cx('notes-row-main')}>
                 <b>{doc.title}</b>
                 <span className={cx('sub')}>

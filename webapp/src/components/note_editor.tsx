@@ -6,7 +6,7 @@ import React, {useCallback, useEffect, useRef, useState, useSyncExternalStore} f
 import {FormattedMessage, useIntl} from 'react-intl';
 import {useSelector} from 'react-redux';
 
-import {getChannel} from 'mattermost-redux/selectors/entities/channels';
+import {getChannel, getCurrentChannel} from 'mattermost-redux/selectors/entities/channels';
 import {getCurrentUser} from 'mattermost-redux/selectors/entities/users';
 import {getTeammateNameDisplaySetting} from 'mattermost-redux/selectors/entities/preferences';
 import {displayUsername} from 'mattermost-redux/utils/user_utils';
@@ -26,6 +26,7 @@ import CollabEditor from './collab_editor';
 import EditorsBar from './editors_bar';
 import Menu, {type MenuItem} from './menu';
 import NoteHistory from './note_history';
+import ScopeChip from './scope';
 
 function download(filename: string, text: string) {
     const url = URL.createObjectURL(new Blob([text], {type: 'text/markdown;charset=utf-8'}));
@@ -138,6 +139,7 @@ export default function NoteEditor({docId}: {docId: string}) {
     }, []);
     const {session, error: sessionError} = useSession(docId, user);
     const channel = useSelector((state: GlobalState) => (doc?.channel_id ? getChannel(state, doc.channel_id) : null));
+    const currentChannel = useSelector(getCurrentChannel);
 
     useEffect(() => {
         client.getDoc(docId).then(setDoc, (err) => setDocError(err.status === 404 ? intl.formatMessage({id: 'notes.not_found', defaultMessage: 'This note was deleted, or you can\'t open it.'}) : err.message));
@@ -196,7 +198,9 @@ export default function NoteEditor({docId}: {docId: string}) {
             onClick: () => setView('history'),
         },
     ];
-    if (doc.channel_id && !channel?.delete_at) {
+
+    // A channel's note is shared in the channel once it has a title; one still untitled can be shared by hand.
+    if (doc.channel_id && !doc.shared_post_id && !channel?.delete_at) {
         items.splice(1, 0, {
             icon: 'forward',
             label: intl.formatMessage({id: 'notes.menu.share', defaultMessage: 'Share in the channel'}),
@@ -204,6 +208,23 @@ export default function NoteEditor({docId}: {docId: string}) {
                 try {
                     await shareNote(doc.id);
                     setNotice(intl.formatMessage({id: 'notes.shared', defaultMessage: 'Shared in the channel.'}));
+                } catch (err) {
+                    setNotice((err as Error).message);
+                }
+            },
+        });
+    }
+
+    // A personal note that should have been the channel's: it moves there, and is shared.
+    const conversation = currentChannel?.type === 'D' || currentChannel?.type === 'G';
+    if (!doc.channel_id && currentChannel && !currentChannel.delete_at) {
+        items.splice(1, 0, {
+            icon: 'forward',
+            label: conversation ? intl.formatMessage({id: 'notes.menu.move_conversation', defaultMessage: 'Share in this conversation'}) : intl.formatMessage({id: 'notes.menu.move', defaultMessage: 'Share in ~{channel}'}, {channel: currentChannel.display_name}),
+            onClick: async () => {
+                try {
+                    setDoc(await client.moveDoc(doc.id, currentChannel.id));
+                    setNotice(intl.formatMessage({id: 'notes.moved', defaultMessage: 'Shared: everyone in the channel can see and edit it now.'}));
                 } catch (err) {
                     setNotice((err as Error).message);
                 }
@@ -248,6 +269,7 @@ export default function NoteEditor({docId}: {docId: string}) {
                         editable={editable}
                     />
                 )}
+                <ScopeChip doc={doc}/>
                 <Menu
                     label={intl.formatMessage({id: 'notes.menu', defaultMessage: 'Note actions'})}
                     items={items}
