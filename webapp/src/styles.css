@@ -18,15 +18,16 @@
 :is(.am-app, .am-layer) .am-pad-tools button:disabled { opacity: .4; pointer-events: none; }
 :is(.am-app, .am-layer) .am-notes-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 :is(.am-app, .am-layer) .am-notes-content > .am-pad { flex: 1; }
-/* Shared or personal at a glance: the app's colour for the channel's, muted with a lock for your own. */
+/* Shared or personal at a glance, both in the app's colour: a filled tile for the channel's, an outlined one with a
+   lock for your own (muted would read as disabled). */
 :is(.am-app, .am-layer) .am-notes-row-ic { position: relative; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 8px; background: color-mix(in srgb, #A3E635 16%, transparent); color: #A3E635; }
-:is(.am-app, .am-layer) .am-notes-row-ic.am-notes-row-personal { background: var(--am-raise-2); color: var(--am-muted); }
-:is(.am-app, .am-layer) .am-notes-row-lock { position: absolute; right: -4px; bottom: -4px; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--am-side); color: var(--am-text-2); }
+:is(.am-app, .am-layer) .am-notes-row-ic.am-notes-row-personal { background: transparent; box-shadow: inset 0 0 0 1.5px color-mix(in srgb, #A3E635 70%, transparent); color: #A3E635; }
+:is(.am-app, .am-layer) .am-notes-row-lock { position: absolute; right: -4px; bottom: -4px; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--am-side); color: #A3E635; }
 :is(.am-app, .am-layer) .am-notes-row-lock .am-ic { width: 10px; height: 10px; }
 :is(.am-app, .am-layer) .am-notes-scope { flex: none; display: inline-flex; align-items: center; gap: 4px; max-width: 140px; height: 22px; padding: 0 8px; border-radius: 11px; font: 600 11.5px var(--am-font-ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 :is(.am-app, .am-layer) .am-notes-scope .am-ic { flex: none; width: 12px; height: 12px; }
 :is(.am-app, .am-layer) .am-notes-scope-shared { background: color-mix(in srgb, #A3E635 16%, transparent); color: #A3E635; }
-:is(.am-app, .am-layer) .am-notes-scope-personal { background: var(--am-raise-2); color: var(--am-muted); }
+:is(.am-app, .am-layer) .am-notes-scope-personal { background: transparent; box-shadow: inset 0 0 0 1px color-mix(in srgb, #A3E635 70%, transparent); color: #A3E635; }
 :is(.am-app, .am-layer) .am-notes-row-main { min-width: 0; }
 :is(.am-app, .am-layer) .am-notes-h-btn { width: 26px; height: 26px; color: var(--am-muted); }
 :is(.am-app, .am-layer) .am-notes-h-btn:hover { background: var(--am-hover); color: var(--am-text); }
@@ -163,11 +164,11 @@ input.amn-notes-title:focus { outline: none; border-color: var(--button-bg); }
 .amn-notes-mention-item.amn-on { background: rgba(var(--button-bg-rgb), 0.08); }
 
 .amn-notes-row-ic { position: relative; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 6px; background: rgba(var(--center-channel-color-rgb), 0.06); color: #65A30D; }
-.amn-notes-row-ic.amn-notes-row-personal { color: rgba(var(--center-channel-color-rgb), 0.56); }
+.amn-notes-row-ic.amn-notes-row-personal { background: transparent; box-shadow: inset 0 0 0 1.5px #65A30D; color: #65A30D; }
 .amn-notes-row-lock { position: absolute; right: -4px; bottom: -4px; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; background: var(--center-channel-bg); font-size: 10px; }
 .amn-notes-scope { flex: none; display: inline-flex; align-items: center; gap: 4px; max-width: 140px; height: 22px; padding: 0 8px; border-radius: 11px; font-size: 11.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .amn-notes-scope-shared { background: rgba(var(--button-bg-rgb), 0.08); color: var(--button-bg); }
-.amn-notes-scope-personal { background: rgba(var(--center-channel-color-rgb), 0.06); color: rgba(var(--center-channel-color-rgb), 0.64); }
+.amn-notes-scope-personal { background: transparent; box-shadow: inset 0 0 0 1px #65A30D; color: #65A30D; }
 
 /* A favorite's star, filled in the Fusion UI's colour. */
 :is(.am-app, .am-layer) .am-notes-star { flex: none; color: var(--am-muted); }
