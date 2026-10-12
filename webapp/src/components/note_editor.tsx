@@ -344,26 +344,29 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
                     onRestore={restore}
                 />
             )}
-            {view === 'edit' && loaded && (
-                <CollabEditor
-                    session={session}
-                    user={user}
-                    editable={editable}
-                    channelId={doc.channel_id || ''}
-                    onEditor={onEditor}
-                    meta={meta}
-                />
-            )}
-            {view === 'edit' && !loaded && (
-                <>
-                    <div className={cx('pad-tools', 'notes-tools-row')}>{meta}</div>
-                    <EmptyState
-                        busy={true}
-                        text={opening}
-                        classicClassName={cx('notes-empty')}
+
+            {/* The editor stays mounted behind the history: restoring a version and exporting go through it */}
+            <div style={{display: view === 'history' ? 'none' : 'contents'}}>
+                {loaded ? (
+                    <CollabEditor
+                        session={session}
+                        user={user}
+                        editable={editable}
+                        channelId={doc.channel_id || ''}
+                        onEditor={onEditor}
+                        meta={meta}
                     />
-                </>
-            )}
+                ) : (
+                    <>
+                        <div className={cx('pad-tools', 'notes-tools-row')}>{meta}</div>
+                        <EmptyState
+                            busy={true}
+                            text={opening}
+                            classicClassName={cx('notes-empty')}
+                        />
+                    </>
+                )}
+            </div>
         </div>
     );
 }
