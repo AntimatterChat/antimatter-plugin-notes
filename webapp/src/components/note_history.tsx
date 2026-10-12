@@ -63,7 +63,9 @@ export default function NoteHistory({docId, canRestore, onRestore}: Props) {
         if (selected === null) {
             return;
         }
-        client.getVersion(docId, selected).then((data) => setContent(versionContent(data)), (err) => setError(err.message));
+
+        // A malformed version throws when decoded, caught as well
+        client.getVersion(docId, selected).then((data) => setContent(versionContent(data))).catch((err) => setError(err.message));
     }, [docId, selected]);
 
     if (error) {
