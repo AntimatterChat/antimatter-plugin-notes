@@ -9,6 +9,7 @@ import {EditorContent, useEditor, useEditorState} from '@tiptap/react';
 import React, {useEffect} from 'react';
 import {useIntl} from 'react-intl';
 
+import {remoteColor} from '../colors';
 import type {default as NoteSession, NoteUser} from '../note_session';
 import Icon, {type IconName} from '../ui/icon';
 import {cx, isFusionUI} from '../ui/web_ui';
@@ -21,7 +22,7 @@ import {useMentions} from './hooks';
 function renderCaret(user: Record<string, unknown>) {
     const caret = document.createElement('span');
     caret.className = cx('rcaret');
-    caret.style.setProperty(isFusionUI() ? '--am-c' : '--c', String(user.color));
+    caret.style.setProperty(isFusionUI() ? '--am-c' : '--c', remoteColor(user.color));
     caret.dataset.name = String(user.name || '');
     return caret;
 }

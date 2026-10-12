@@ -4,6 +4,7 @@
 import React from 'react';
 import {FormattedMessage, useIntl} from 'react-intl';
 
+import {remoteColor} from '../colors';
 import type {Editor} from '../note_session';
 import type {SyncStatus} from '../relay/connection';
 import {cx, isFusionUI} from '../ui/web_ui';
@@ -17,7 +18,7 @@ import {useSteadyStatus} from './steady_status';
 function EditorDot({editor}: {editor: Editor}) {
     const intl = useIntl();
     const name = useDisplayName(editor.userId) || editor.name;
-    const style = {[isFusionUI() ? '--am-c' : '--c']: editor.color} as React.CSSProperties;
+    const style = {[isFusionUI() ? '--am-c' : '--c']: remoteColor(editor.color)} as React.CSSProperties;
     const label = editor.self ? intl.formatMessage({id: 'notes.editors.you', defaultMessage: 'You'}) : name;
     return (
         <span
