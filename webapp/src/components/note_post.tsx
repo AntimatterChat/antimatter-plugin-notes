@@ -7,7 +7,7 @@ import {FormattedMessage} from 'react-intl';
 import type {Post} from '@mattermost/types/posts';
 
 import {client} from '../client';
-import type {Doc} from '../relay/client';
+import {isDocId, type Doc} from '../relay/client';
 import Icon from '../ui/icon';
 import {appColour, cx} from '../ui/web_ui';
 import {openNote} from '../ui_state';
@@ -29,8 +29,10 @@ function loadDoc(docId: string) {
 
 // NotePost is the card of a note shared in a channel.
 export default function NotePost({post}: {post: Post}) {
-    const docId = String(post.props?.doc_id || '');
-    const [doc, setDoc] = useState<Doc | null | undefined>();
+    const propId = post.props?.doc_id;
+    const docId = isDocId(propId) ? propId : '';
+    const [loaded, setDoc] = useState<Doc | null | undefined>();
+    const doc = docId ? loaded : null;
 
     useEffect(() => {
         let cancelled = false;
