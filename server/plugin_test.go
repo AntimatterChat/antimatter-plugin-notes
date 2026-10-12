@@ -125,6 +125,12 @@ func TestShare(t *testing.T) {
 	w = do("/api/v1/docs/"+doc.ID+"/share", map[string]any{})
 	assert.Equal(t, http.StatusCreated, w.Code, w.Body.String())
 
+	// Nor can the notes of an archived channel
+	channels.channel.DeleteAt = 1
+	w = do("/api/v1/docs/"+doc.ID+"/share", map[string]any{})
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	channels.channel.DeleteAt = 0
+
 	// Personal notes can't be shared
 	w = do("/api/v1/docs", map[string]any{"title": "Mine"})
 	require.Equal(t, http.StatusCreated, w.Code)
