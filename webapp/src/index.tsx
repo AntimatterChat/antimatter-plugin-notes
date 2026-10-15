@@ -14,6 +14,7 @@ import {RelayEvents} from './relay/events';
 import type {PluginClass, PluginRegistry, PluginStore, RightHandSidebarRegistration} from './types/host';
 import Icon from './ui/icon';
 import {setShowPanel} from './ui_state';
+import {registerTranslations} from './translations';
 
 import './styles.css';
 
@@ -35,6 +36,8 @@ const title = (
 
 export default class Plugin implements PluginClass {
     public initialize(registry: PluginRegistry, store: PluginStore) {
+        registerTranslations(registry);
+
         if (window.basename) {
             Client4.setUrl(window.basename);
         }
