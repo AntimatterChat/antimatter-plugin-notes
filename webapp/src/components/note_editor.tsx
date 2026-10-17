@@ -122,9 +122,17 @@ function TitleInput({doc, editable}: {doc: Doc; editable: boolean}) {
     );
 }
 
+type Props = {
+    docId: string;
+
+    // The view it opens on (the note, or its versions), and who to tell when it changes: where the panel is
+    initialView?: 'edit' | 'history';
+    onViewChange?: (docId: string, view: 'edit' | 'history') => void;
+};
+
 // NoteEditor shows an open note: its title and its actions in the panel's header, the editor under its toolbar, and
 // who's editing.
-export default function NoteEditor({docId}: {docId: string}) {
+export default function NoteEditor({docId, initialView = 'edit', onViewChange}: Props) {
     const intl = useIntl();
     const me = useSelector(getCurrentUser);
     const nameSetting = useSelector(getTeammateNameDisplaySetting);
@@ -133,7 +141,7 @@ export default function NoteEditor({docId}: {docId: string}) {
     const [doc, setDoc] = useState<Doc | null>(null);
     const [docError, setDocError] = useState('');
     const [deleted, setDeleted] = useState(false);
-    const [view, setView] = useState<'edit' | 'history'>('edit');
+    const [view, setView] = useState<'edit' | 'history'>(initialView);
     const [notice, setNotice] = useState('');
     const editorRef = useRef<Editor | null>(null);
     const onEditor = useCallback((editor: Editor | null) => {
@@ -142,6 +150,10 @@ export default function NoteEditor({docId}: {docId: string}) {
     const {session, error: sessionError} = useSession(docId, user);
     const channel = useSelector((state: GlobalState) => (doc?.channel_id ? getChannel(state, doc.channel_id) : null));
     const currentChannel = useSelector(getCurrentChannel);
+
+    useEffect(() => {
+        onViewChange?.(docId, view);
+    }, [docId, view, onViewChange]);
 
     useEffect(() => {
         client.getDoc(docId).then(setDoc, (err) => setDocError(err.status === 404 ? intl.formatMessage({id: 'notes.not_found', defaultMessage: 'This note was deleted, or you can\'t open it.'}) : err.message));
