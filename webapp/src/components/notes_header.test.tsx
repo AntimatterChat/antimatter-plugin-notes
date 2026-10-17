@@ -1,7 +1,7 @@
 // Copyright (c) 2026-present Antimatter contributors.
 // See LICENSE.txt for license information.
 
-import {act, fireEvent, render, screen, within} from '@testing-library/react';
+import {act, fireEvent, render, screen, waitFor, within} from '@testing-library/react';
 import React from 'react';
 import {IntlProvider} from 'react-intl';
 import {Provider} from 'react-redux';
@@ -274,8 +274,10 @@ describe('an open note', () => {
 
         fireEvent.click(await header().findByRole('button', {name: 'Note actions'}));
         fireEvent.click(screen.getByRole('menuitem', {name: 'Delete'}));
-        expect(confirm).toHaveBeenCalled();
-        expect(mocked.deleteDoc).toHaveBeenCalledWith('n1');
+
+        // The classic UI keeps the browser's confirmation
+        expect(confirm).toHaveBeenCalledWith('Delete "Plan"?\n\nIt\'s deleted for everyone. This can\'t be undone.');
+        await waitFor(() => expect(mocked.deleteDoc).toHaveBeenCalledWith('n1'));
         expect(await header().findByText('Notes')).toBeInTheDocument();
         confirm.mockRestore();
     });

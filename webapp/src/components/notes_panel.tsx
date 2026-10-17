@@ -7,7 +7,7 @@ import {useSelector} from 'react-redux';
 import {getCurrentChannel} from 'mattermost-redux/selectors/entities/channels';
 
 import {panelStateOf, parsePanelState} from '../panel_state';
-import {cx} from '../ui/web_ui';
+import {appColour, cx} from '../ui/web_ui';
 import {panelClosed, panelOpened, panelRestored, restorePanel, useListView, useOpenDoc} from '../ui_state';
 
 import NoteEditor from './note_editor';
@@ -68,7 +68,10 @@ export default function NotesPanel({setPanelState, initialPanelState}: Props) {
     }, [setPanelState, state]);
 
     return (
-        <div className={cx('notes-root')}>
+        <div
+            className={cx('notes-root')}
+            style={appColour()}
+        >
             {docId ? (
                 <NoteEditor
                     key={docId}

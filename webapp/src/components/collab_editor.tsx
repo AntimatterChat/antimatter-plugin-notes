@@ -14,6 +14,7 @@ import Icon, {type IconName} from '../ui/icon';
 import {cx, isFusionUI} from '../ui/web_ui';
 
 import {baseExtensions} from './extensions';
+import {iconTip} from './fusion/tip';
 import {useMentions} from './hooks';
 
 // renderCaret draws the caret of another editor: the mockup's caret with their name.
@@ -37,8 +38,7 @@ function Tool({icon, label, active, onClick}: ToolProps) {
         <button
             type='button'
             className={cx(active && 'on')}
-            title={label}
-            aria-label={label}
+            {...iconTip(label)}
             aria-pressed={active}
             onMouseDown={(e) => e.preventDefault()}
             onClick={onClick}

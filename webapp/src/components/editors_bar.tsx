@@ -8,6 +8,7 @@ import type {Editor} from '../note_session';
 import type {SyncStatus} from '../relay/connection';
 import {cx, isFusionUI} from '../ui/web_ui';
 
+import {iconTip} from './fusion/tip';
 import {useDisplayName} from './hooks';
 import {useSteadyStatus} from './steady_status';
 
@@ -22,8 +23,7 @@ function EditorDot({editor}: {editor: Editor}) {
         <span
             className={cx('editor-dot')}
             style={style}
-            title={label}
-            aria-label={label}
+            {...iconTip(label)}
             role='img'
         >
             {(name || '?').charAt(0).toUpperCase()}

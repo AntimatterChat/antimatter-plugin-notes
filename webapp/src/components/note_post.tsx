@@ -9,7 +9,7 @@ import type {Post} from '@mattermost/types/posts';
 import {client} from '../client';
 import type {Doc} from '../relay/client';
 import Icon from '../ui/icon';
-import {cx} from '../ui/web_ui';
+import {appColour, cx} from '../ui/web_ui';
 import {openNote} from '../ui_state';
 
 import RelativeTime from './relative_time';
@@ -46,7 +46,11 @@ export default function NotePost({post}: {post: Post}) {
     const available = doc !== null;
 
     return (
-        <div className={cx('card', 'compact', 'notes-card')}>
+        <div
+            className={cx('card', 'compact', 'notes-card')}
+            style={appColour()}
+            data-testid='notes-card'
+        >
             <div className={cx('card-author')}>
                 <Icon
                     name='pad'

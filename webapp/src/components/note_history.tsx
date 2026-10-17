@@ -5,14 +5,16 @@ import type {JSONContent} from '@tiptap/core';
 import {EditorContent, useEditor} from '@tiptap/react';
 import {yDocToProsemirrorJSON} from '@tiptap/y-tiptap';
 import React, {useEffect, useState} from 'react';
-import {FormattedDate, FormattedMessage, FormattedTime} from 'react-intl';
+import {FormattedDate, FormattedMessage, FormattedTime, useIntl} from 'react-intl';
 import * as Y from 'yjs';
 
 import {client} from '../client';
 import type {Version} from '../relay/client';
+import Icon from '../ui/icon';
 import {cx} from '../ui/web_ui';
 
 import {baseExtensions} from './extensions';
+import EmptyState from './fusion/empty_state';
 
 // versionContent returns the content of a past version of a note (a Yjs snapshot).
 export function versionContent(data: Uint8Array): JSONContent {
@@ -46,6 +48,7 @@ type Props = {
 
 // NoteHistory lists the past versions of a note, shows them and restores them.
 export default function NoteHistory({docId, canRestore, onRestore}: Props) {
+    const intl = useIntl();
     const [versions, setVersions] = useState<Version[] | null>(null);
     const [selected, setSelected] = useState<number | null>(null);
     const [content, setContent] = useState<JSONContent | null>(null);
@@ -67,16 +70,22 @@ export default function NoteHistory({docId, canRestore, onRestore}: Props) {
         return <div className={cx('notes-error')}>{error}</div>;
     }
     if (!versions) {
-        return <div className={cx('notes-empty')}>{'…'}</div>;
+        return (
+            <EmptyState
+                busy={true}
+                text={intl.formatMessage({id: 'notes.history.loading', defaultMessage: 'Loading the versions…', description: 'Shown in a note\'s version history while its past versions load.'})}
+                classicClassName={cx('notes-empty')}
+            />
+        );
     }
     if (!versions.length) {
         return (
-            <div className={cx('notes-empty')}>
-                <FormattedMessage
-                    id='notes.history.empty'
-                    defaultMessage='No past versions yet. Versions are kept every 10 minutes or so while a note is edited.'
-                />
-            </div>
+            <EmptyState
+                icon={<Icon name='clock'/>}
+                title={intl.formatMessage({id: 'notes.history.empty_title', defaultMessage: 'No past versions yet', description: 'Title of a note\'s version history when it has no past versions.'})}
+                text={intl.formatMessage({id: 'notes.history.empty_text', defaultMessage: 'Versions are kept every 10 minutes or so while a note is edited.', description: 'Under "No past versions yet" in a note\'s version history: when versions are kept.'})}
+                classicClassName={cx('notes-empty')}
+            />
         );
     }
 

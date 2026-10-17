@@ -24,6 +24,9 @@ import {setOpenDoc} from '../ui_state';
 
 import CollabEditor from './collab_editor';
 import EditorsBar from './editors_bar';
+import {confirmDialog} from './fusion/confirm_dialog';
+import EmptyState from './fusion/empty_state';
+import {iconTip} from './fusion/tip';
 import Menu, {type MenuItem} from './menu';
 import NoteHistory from './note_history';
 import {HeadPortal} from './notes_header';
@@ -177,8 +180,7 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
         <button
             type='button'
             className={cx('icon-btn', 'notes-back')}
-            title={intl.formatMessage({id: 'notes.back', defaultMessage: 'All notes'})}
-            aria-label={intl.formatMessage({id: 'notes.back', defaultMessage: 'All notes'})}
+            {...iconTip(intl.formatMessage({id: 'notes.back', defaultMessage: 'All notes'}))}
             onClick={() => (view === 'history' ? setView('edit') : setOpenDoc(null))}
         >
             <Icon name='chev'/>
@@ -186,12 +188,26 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
         </button>
     );
 
+    const opening = intl.formatMessage({id: 'notes.opening', defaultMessage: 'Opening the note…', description: 'Shown in the Notes panel while a note opens (loads).'});
     const failure = docError || sessionError || (deleted && intl.formatMessage({id: 'notes.deleted', defaultMessage: 'This note was deleted.'}));
     if (failure || !doc || !session) {
         return (
             <div className={cx('pad-wrap')}>
                 <HeadPortal>{back}</HeadPortal>
-                <div className={failure ? cx('notes-error') : cx('notes-empty')}>{failure || '…'}</div>
+                {failure ? (
+                    <EmptyState
+                        tone='danger'
+                        icon={<Icon name='pad'/>}
+                        text={failure}
+                        classicClassName={cx('notes-error')}
+                    />
+                ) : (
+                    <EmptyState
+                        busy={true}
+                        text={opening}
+                        classicClassName={cx('notes-empty')}
+                    />
+                )}
             </div>
         );
     }
@@ -254,9 +270,16 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
             icon: 'trash',
             label: intl.formatMessage({id: 'notes.menu.delete', defaultMessage: 'Delete'}),
             danger: true,
-            onClick: () => {
-                // eslint-disable-next-line no-alert
-                if (window.confirm(intl.formatMessage({id: 'notes.delete.confirm', defaultMessage: 'Delete "{title}" for everyone? This can\'t be undone.'}, {title: doc.title}))) {
+            onClick: async () => {
+                const yes = await confirmDialog({
+                    title: doc.title ? intl.formatMessage({id: 'notes.delete.title', defaultMessage: 'Delete "{title}"?', description: 'Title of the dialog confirming the deletion of a note; {title} is the note\'s title.'}, {title: doc.title}) : intl.formatMessage({id: 'notes.delete.title_untitled', defaultMessage: 'Delete this note?', description: 'Title of the dialog confirming the deletion of a note that has no title.'}),
+                    message: intl.formatMessage({id: 'notes.delete.lead', defaultMessage: 'It\'s deleted for everyone. This can\'t be undone.', description: 'Under the title of the dialog confirming the deletion of a note.'}),
+                    confirmLabel: intl.formatMessage({id: 'notes.menu.delete', defaultMessage: 'Delete'}),
+                    cancelLabel: intl.formatMessage({id: 'notes.delete.cancel', defaultMessage: 'Cancel', description: 'Button of the dialog confirming the deletion of a note: keep the note.'}),
+                    danger: true,
+                    icon: 'trash',
+                });
+                if (yes) {
                     client.deleteDoc(doc.id).then(() => setOpenDoc(null), (err) => setNotice(err.message));
                 }
             },
@@ -336,7 +359,11 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
             {view === 'edit' && !loaded && (
                 <>
                     <div className={cx('pad-tools', 'notes-tools-row')}>{meta}</div>
-                    <div className={cx('notes-empty')}>{'…'}</div>
+                    <EmptyState
+                        busy={true}
+                        text={opening}
+                        classicClassName={cx('notes-empty')}
+                    />
                 </>
             )}
         </div>

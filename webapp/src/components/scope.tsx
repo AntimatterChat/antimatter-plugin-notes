@@ -14,18 +14,19 @@ import type {Doc} from '../relay/client';
 import Icon from '../ui/icon';
 import {cx} from '../ui/web_ui';
 
+import {iconTip, tip} from './fusion/tip';
+
 // ScopeChip tells at a glance whose a note is: shared with a channel (its name, in the app's colour), or
 // personal (a lock, outlined). Compact, in the note's header, it's only the icon, with the same tooltip.
 export default function ScopeChip({doc, compact = false}: {doc: Doc; compact?: boolean}) {
     const intl = useIntl();
     const channel = useSelector((state: GlobalState) => (doc.channel_id ? getChannel(state, doc.channel_id) : null));
     if (!doc.channel_id) {
-        const tip = intl.formatMessage({id: 'notes.scope.personal_tip', defaultMessage: 'Personal: only you can see it'});
+        const tipText = intl.formatMessage({id: 'notes.scope.personal_tip', defaultMessage: 'Personal: only you can see it'});
         return (
             <span
                 className={cx('notes-scope', 'notes-scope-personal', compact && 'notes-scope-compact')}
-                title={tip}
-                {...(compact ? {role: 'img', 'aria-label': tip} : {})}
+                {...(compact ? {role: 'img', ...iconTip(tipText)} : tip(tipText))}
             >
                 <Icon
                     name='lock'
@@ -37,12 +38,11 @@ export default function ScopeChip({doc, compact = false}: {doc: Doc; compact?: b
     }
     const conversation = channel?.type === 'D' || channel?.type === 'G';
     const name = conversation ? intl.formatMessage({id: 'notes.scope.conversation', defaultMessage: 'Conversation'}) : channel?.display_name || '';
-    const tip = conversation ? intl.formatMessage({id: 'notes.scope.conversation_tip', defaultMessage: 'Shared with everyone in this conversation'}) : intl.formatMessage({id: 'notes.scope.shared_tip', defaultMessage: 'Shared with everyone in ~{channel}'}, {channel: name});
+    const tipText = conversation ? intl.formatMessage({id: 'notes.scope.conversation_tip', defaultMessage: 'Shared with everyone in this conversation'}) : intl.formatMessage({id: 'notes.scope.shared_tip', defaultMessage: 'Shared with everyone in ~{channel}'}, {channel: name});
     return (
         <span
             className={cx('notes-scope', 'notes-scope-shared', compact && 'notes-scope-compact')}
-            title={tip}
-            {...(compact ? {role: 'img', 'aria-label': tip} : {})}
+            {...(compact ? {role: 'img', ...iconTip(tipText)} : tip(tipText))}
         >
             <Icon
                 name={conversation ? 'users' : 'hash'}
@@ -63,8 +63,7 @@ export function FavoriteButton({doc}: {doc: Doc}) {
         <button
             type='button'
             className={cx('icon-btn', 'notes-star', favorite && 'on')}
-            title={label}
-            aria-label={label}
+            {...iconTip(label)}
             aria-pressed={favorite}
             onClick={() => {
                 setFavorite(!favorite);
