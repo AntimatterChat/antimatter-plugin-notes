@@ -7,6 +7,8 @@ import {createPortal} from 'react-dom';
 import Icon, {type IconName} from '../ui/icon';
 import {cx, isFusionUI} from '../ui/web_ui';
 
+import {iconTip} from './fusion/tip';
+
 export type MenuItem = {
     icon: IconName;
     label: string;
@@ -75,8 +77,7 @@ export default function Menu({label, items}: {label: string; items: MenuItem[]})
             <button
                 type='button'
                 className={cx('icon-btn')}
-                title={label}
-                aria-label={label}
+                {...iconTip(label)}
                 aria-haspopup='menu'
                 aria-expanded={open}
                 onClick={() => setOpen(!open)}

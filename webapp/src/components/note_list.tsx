@@ -11,10 +11,12 @@ import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
 
 import {client, events} from '../client';
 import type {Doc} from '../relay/client';
-import Icon from '../ui/icon';
+import Icon, {type IconName} from '../ui/icon';
 import {cx} from '../ui/web_ui';
 import {setListView, setOpenDoc, useListView} from '../ui_state';
 
+import EmptyState from './fusion/empty_state';
+import {iconTip, tip} from './fusion/tip';
 import {useDisplayName} from './hooks';
 import {HeadPortal} from './notes_header';
 import RelativeTime from './relative_time';
@@ -57,14 +59,34 @@ function NoteRow({doc, showScope = false}: {doc: Doc; showScope?: boolean}) {
 type SectionProps = {
     showScope?: boolean;
     docs: Doc[] | null;
-    empty: React.ReactNode;
+
+    // What the view shows without notes: an icon, a title, a sentence, and the new note button's action, if any.
+    empty: {icon: IconName; title: React.ReactNode; text: React.ReactNode; action?: {label: string; onClick: () => void}};
 };
 
 // Section lists the notes of the view picked above it: the panel's header says it's the notes, the view's tab
 // which ones.
 function Section({docs, empty, showScope = false}: SectionProps) {
-    if (!docs?.length) {
-        return <div className={cx('notes-empty')}>{docs ? empty : '…'}</div>;
+    const intl = useIntl();
+    if (!docs) {
+        return (
+            <EmptyState
+                busy={true}
+                text={intl.formatMessage({id: 'notes.list.loading', defaultMessage: 'Loading notes…', description: 'Shown in the Notes panel while the list of notes loads.'})}
+                classicClassName={cx('notes-empty')}
+            />
+        );
+    }
+    if (!docs.length) {
+        return (
+            <EmptyState
+                icon={<Icon name={empty.icon}/>}
+                title={empty.title}
+                text={empty.text}
+                action={empty.action}
+                classicClassName={cx('notes-empty')}
+            />
+        );
     }
     return (
         <>
@@ -166,8 +188,7 @@ export default function NoteList({channel}: {channel?: Channel}) {
                     <button
                         type='button'
                         className={cx('icon-btn', 'notes-h-btn')}
-                        title={createLabel}
-                        aria-label={createLabel}
+                        {...iconTip(createLabel)}
                         onClick={() => create(shown === 'mine')}
                     >
                         <Icon name='plus'/>
@@ -184,7 +205,7 @@ export default function NoteList({channel}: {channel?: Channel}) {
                         role='tab'
                         aria-selected={shown === 'channel'}
                         className={shown === 'channel' ? cx('on') : ''}
-                        title={intl.formatMessage({id: 'notes.list.channel', defaultMessage: 'Shared with {channel}'}, {channel: channelName})}
+                        {...tip(intl.formatMessage({id: 'notes.list.channel', defaultMessage: 'Shared with {channel}'}, {channel: channelName}))}
                         onClick={() => setListView('channel')}
                     >
                         {conversation ? (
@@ -216,7 +237,7 @@ export default function NoteList({channel}: {channel?: Channel}) {
                         role='tab'
                         aria-selected={shown === 'mine'}
                         className={shown === 'mine' ? cx('on') : ''}
-                        title={intl.formatMessage({id: 'notes.list.personal', defaultMessage: 'Personal notes'})}
+                        {...tip(intl.formatMessage({id: 'notes.list.personal', defaultMessage: 'Personal notes'}))}
                         onClick={() => setListView('mine')}
                     >
                         <FormattedMessage
@@ -230,35 +251,34 @@ export default function NoteList({channel}: {channel?: Channel}) {
             {shown === 'favorites' && (
                 <Section
                     docs={favoriteDocs}
-                    empty={
-                        <FormattedMessage
-                            id='notes.list.favorites_empty'
-                            defaultMessage='Star a note to find it here, wherever it is.'
-                        />
-                    }
+                    empty={{
+                        icon: 'star',
+                        title: intl.formatMessage({id: 'notes.list.starred_empty_title', defaultMessage: 'Nothing starred yet', description: 'Title of the empty starred view of the Notes panel: the person has starred no note.'}),
+                        text: intl.formatMessage({id: 'notes.list.favorites_empty', defaultMessage: 'Star a note to find it here, wherever it is.'}),
+                    }}
                     showScope={true}
                 />
             )}
             {shown === 'channel' && channel && (
                 <Section
                     docs={channelDocs}
-                    empty={
-                        <FormattedMessage
-                            id='notes.list.channel_empty'
-                            defaultMessage='No notes here yet. Notes added here can be edited by every member of the channel.'
-                        />
-                    }
+                    empty={{
+                        icon: 'pad',
+                        title: intl.formatMessage({id: 'notes.list.channel_empty_title', defaultMessage: 'No notes here yet', description: 'Title of the Notes panel when the current channel or conversation has no notes.'}),
+                        text: intl.formatMessage({id: 'notes.list.channel_empty_text', defaultMessage: 'Every member of the channel can edit the notes added here.', description: 'Under "No notes here yet" in the Notes panel: who can edit a channel\'s notes.'}),
+                        ...(createLabel ? {action: {label: createLabel, onClick: () => create(false)}} : {}),
+                    }}
                 />
             )}
             {shown === 'mine' && (
                 <Section
                     docs={personalDocs}
-                    empty={
-                        <FormattedMessage
-                            id='notes.list.personal_empty'
-                            defaultMessage='Only you can see your personal notes.'
-                        />
-                    }
+                    empty={{
+                        icon: 'lock',
+                        title: intl.formatMessage({id: 'notes.list.personal_empty_title', defaultMessage: 'No personal notes yet', description: 'Title of the personal ("Mine") view of the Notes panel when the person has no personal notes.'}),
+                        text: intl.formatMessage({id: 'notes.list.personal_empty', defaultMessage: 'Only you can see your personal notes.'}),
+                        ...(createLabel ? {action: {label: createLabel, onClick: () => create(true)}} : {}),
+                    }}
                 />
             )}
         </div>

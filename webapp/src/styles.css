@@ -56,8 +56,7 @@
 /* The switch between the channel's items and your own, as the todo app's: across the panel. */
 :is(.am-app, .am-layer) .am-notes-seg { display: flex; margin-bottom: 4px; }
 :is(.am-app, .am-layer) .am-notes-seg button { flex: 1; }
-:is(.am-app, .am-layer) .am-notes-empty { padding: 10px 12px; color: var(--am-muted); font-size: 13px; }
-:is(.am-app, .am-layer) .am-notes-error { margin: 10px 12px; padding: 8px 10px; border-radius: 8px; background: rgba(242, 63, 67, 0.12); color: var(--am-danger); font-size: 13px; }
+:is(.am-app, .am-layer) .am-notes-error { margin: 10px 12px; padding: 8px 10px; border-radius: 8px; background: color-mix(in srgb, var(--am-danger) 12%, transparent); color: var(--am-danger); font-size: 13px; }
 :is(.am-app, .am-layer) .am-notes-notice { margin: 6px 12px 0; padding: 6px 10px; border-radius: 8px; background: var(--am-side); color: var(--am-text-2); font-size: 12.5px; text-align: left; }
 :is(.am-app, .am-layer) .am-notes-menu-wrap { position: relative; }
 :is(.am-app, .am-layer) .am-notes-menu { position: fixed; z-index: 10000; width: 220px; display: grid; gap: 1px; padding: 6px; border-radius: 12px; background: var(--am-raise); border: 1px solid var(--am-line); box-shadow: var(--am-shadow); }
@@ -70,7 +69,7 @@
 :is(.am-app, .am-layer) .am-notes-version { height: 28px; padding: 0 10px; border-radius: 14px; background: var(--am-side); color: var(--am-text-2); font-size: 12.5px; font-weight: 600; }
 :is(.am-app, .am-layer) .am-notes-version.am-on { background: var(--am-matter-soft); color: var(--am-matter); }
 :is(.am-app, .am-layer) .am-notes-history-actions { padding: 10px 12px; border-top: 1px solid var(--am-line); }
-:is(.am-app, .am-layer) .am-notes-card .am-card-author .am-ic { color: #A3E635; }
+:is(.am-app, .am-layer) .am-notes-card .am-card-author .am-ic { color: var(--am-cc, #A3E635); }
 :is(.am-app, .am-layer) .am-pad p.is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; pointer-events: none; color: var(--am-faint, var(--am-muted)); }
 :is(.am-app, .am-layer) .am-pad p { margin: 0 0 6px; }
 :is(.am-app, .am-layer) .am-pad ol { margin: 2px 0; padding-left: 22px; }
@@ -109,6 +108,10 @@
 .amn-seg button { flex: 1; height: 30px; border-radius: 6px; color: rgba(var(--center-channel-color-rgb), 0.64); font-size: 13.5px; font-weight: 600; }
 .amn-seg button.amn-on { background: rgba(var(--center-channel-color-rgb), 0.08); color: var(--center-channel-color); }
 .amn-notes-empty { padding: 10px 12px; color: rgba(var(--center-channel-color-rgb), 0.64); font-size: 13px; }
+/* The shared empty state (components/fusion/empty_state) in the classic UI's own look */
+.amn-notes-empty b { display: block; font-weight: 600; }
+.amn-notes-empty p, .amn-notes-error p { margin: 0; }
+.amn-notes-empty .btn { margin-top: 8px; }
 .amn-notes-error { margin: 10px 12px; padding: 8px 10px; border-radius: 4px; background: rgba(var(--error-text-color-rgb), 0.08); color: var(--error-text); font-size: 13px; }
 .amn-notes-notice { margin: 6px 12px 0; padding: 6px 10px; border-radius: 4px; background: rgba(var(--center-channel-color-rgb), 0.06); font-size: 12.5px; text-align: left; }
 .amn-notes-head { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; color: var(--center-channel-color); }
@@ -209,5 +212,5 @@ input.amn-notes-title:focus { outline: none; border-color: var(--button-bg); }
 
 /* A favorite's star, filled in the Fusion UI's colour. */
 :is(.am-app, .am-layer) .am-notes-star { flex: none; color: var(--am-muted); }
-:is(.am-app, .am-layer) .am-notes-star.am-on { color: #F0B232; }
+:is(.am-app, .am-layer) .am-notes-star.am-on { color: var(--am-spark); }
 :is(.am-app, .am-layer) .am-notes-star.am-on .am-ic { fill: currentColor; }
