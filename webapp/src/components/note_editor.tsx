@@ -26,6 +26,7 @@ import CollabEditor from './collab_editor';
 import EditorsBar from './editors_bar';
 import Menu, {type MenuItem} from './menu';
 import NoteHistory from './note_history';
+import {HeadPortal} from './notes_header';
 import ScopeChip, {FavoriteButton} from './scope';
 
 function download(filename: string, text: string) {
@@ -121,7 +122,8 @@ function TitleInput({doc, editable}: {doc: Doc; editable: boolean}) {
     );
 }
 
-// NoteEditor shows an open note: its title, who's editing, the editor, and its actions.
+// NoteEditor shows an open note: its title and its actions in the panel's header, the editor under its toolbar, and
+// who's editing.
 export default function NoteEditor({docId}: {docId: string}) {
     const intl = useIntl();
     const me = useSelector(getCurrentUser);
@@ -157,14 +159,18 @@ export default function NoteEditor({docId}: {docId: string}) {
         }
     }), [docId]);
 
+    // Back to the list, or from the versions to the note: the chevron and the app's icon, where the panel's header
+    // shows the app's icon over the list.
     const back = (
         <button
-            className={cx('icon-btn')}
+            type='button'
+            className={cx('icon-btn', 'notes-back')}
             title={intl.formatMessage({id: 'notes.back', defaultMessage: 'All notes'})}
             aria-label={intl.formatMessage({id: 'notes.back', defaultMessage: 'All notes'})}
             onClick={() => (view === 'history' ? setView('edit') : setOpenDoc(null))}
         >
             <Icon name='chev'/>
+            <Icon name='pad'/>
         </button>
     );
 
@@ -172,7 +178,7 @@ export default function NoteEditor({docId}: {docId: string}) {
     if (failure || !doc || !session) {
         return (
             <div className={cx('pad-wrap')}>
-                <div className={cx('notes-bar')}>{back}</div>
+                <HeadPortal>{back}</HeadPortal>
                 <div className={failure ? cx('notes-error') : cx('notes-empty')}>{failure || '…'}</div>
             </div>
         );
@@ -251,9 +257,19 @@ export default function NoteEditor({docId}: {docId: string}) {
         setNotice(intl.formatMessage({id: 'notes.restored', defaultMessage: 'Version restored. Undo to go back.'}));
     };
 
+    const meta = (
+        <EditorsBar
+            editors={session.editors()}
+            status={session.status}
+            readOnly={!editable}
+        />
+    );
+
+    // One header, the panel's: back, the title, where it's shared, the star and the actions. Under it, one slim row:
+    // the formatting tools (for those who can edit), who's editing and whether it's saved.
     return (
         <div className={cx('pad-wrap')}>
-            <div className={cx('notes-bar')}>
+            <HeadPortal>
                 {back}
                 {view === 'history' ? (
                     <span className={cx('notes-title')}>
@@ -269,43 +285,46 @@ export default function NoteEditor({docId}: {docId: string}) {
                         editable={editable}
                     />
                 )}
+                <ScopeChip
+                    doc={doc}
+                    compact={true}
+                />
                 <FavoriteButton doc={doc}/>
-                <ScopeChip doc={doc}/>
                 <Menu
                     label={intl.formatMessage({id: 'notes.menu', defaultMessage: 'Note actions'})}
                     items={items}
                 />
-            </div>
+            </HeadPortal>
             {notice && (
                 <button
+                    type='button'
                     className={cx('notes-notice')}
                     onClick={() => setNotice('')}
                 >
                     {notice}
                 </button>
             )}
-            {view === 'history' ? (
+            {view === 'history' && (
                 <NoteHistory
                     docId={doc.id}
                     canRestore={editable}
                     onRestore={restore}
                 />
-            ) : (
+            )}
+            {view === 'edit' && loaded && (
+                <CollabEditor
+                    session={session}
+                    user={user}
+                    editable={editable}
+                    channelId={doc.channel_id || ''}
+                    onEditor={onEditor}
+                    meta={meta}
+                />
+            )}
+            {view === 'edit' && !loaded && (
                 <>
-                    <EditorsBar
-                        editors={session.editors()}
-                        status={session.status}
-                        readOnly={!editable}
-                    />
-                    {loaded ? (
-                        <CollabEditor
-                            session={session}
-                            user={user}
-                            editable={editable}
-                            channelId={doc.channel_id || ''}
-                            onEditor={onEditor}
-                        />
-                    ) : <div className={cx('notes-empty')}>{'…'}</div>}
+                    <div className={cx('pad-tools', 'notes-tools-row')}>{meta}</div>
+                    <div className={cx('notes-empty')}>{'…'}</div>
                 </>
             )}
         </div>

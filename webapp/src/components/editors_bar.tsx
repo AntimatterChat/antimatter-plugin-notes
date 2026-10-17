@@ -2,7 +2,7 @@
 // See LICENSE.txt for license information.
 
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
+import {FormattedMessage, useIntl} from 'react-intl';
 
 import type {Editor} from '../note_session';
 import type {SyncStatus} from '../relay/connection';
@@ -11,21 +11,22 @@ import {cx, isFusionUI} from '../ui/web_ui';
 import {useDisplayName} from './hooks';
 import {useSteadyStatus} from './steady_status';
 
-function EditorChip({editor}: {editor: Editor}) {
+// EditorDot is someone who has the note open: a dot in their caret's colour, with their initial and their name as its
+// tooltip.
+function EditorDot({editor}: {editor: Editor}) {
+    const intl = useIntl();
     const name = useDisplayName(editor.userId) || editor.name;
     const style = {[isFusionUI() ? '--am-c' : '--c']: editor.color} as React.CSSProperties;
+    const label = editor.self ? intl.formatMessage({id: 'notes.editors.you', defaultMessage: 'You'}) : name;
     return (
         <span
-            className={cx('editor-chip')}
-            title={name}
+            className={cx('editor-dot')}
+            style={style}
+            title={label}
+            aria-label={label}
+            role='img'
         >
-            <i style={style}/>
-            {editor.self ? (
-                <FormattedMessage
-                    id='notes.editors.you'
-                    defaultMessage='You'
-                />
-            ) : name}
+            {(name || '?').charAt(0).toUpperCase()}
         </span>
     );
 }
@@ -79,36 +80,43 @@ function StatusText({status, readOnly}: {status: SyncStatus; readOnly: boolean})
     }
 }
 
-// EditorsBar shows who has the note open, and whether the changes are saved.
+// The most people shown as dots: the others are counted.
+const MAX_DOTS = 4;
+
+// EditorsBar tells, at the end of the note's toolbar, who else has the note open and whether the changes are
+// saved.
 export default function EditorsBar({editors, status, readOnly}: {editors: Editor[]; status: SyncStatus; readOnly: boolean}) {
-    // One chip per person, even with the note open in several windows
+    const intl = useIntl();
+
+    // One dot per person, even with the note open in several windows; you first
     const seen = new Set<string>();
-    const people = editors.filter((e) => !seen.has(e.userId) && seen.add(e.userId));
+    const people = editors.filter((e) => !seen.has(e.userId) && seen.add(e.userId)).sort((a, b) => Number(b.self) - Number(a.self));
     return (
-        <div className={cx('pad-meta')}>
-            {people.map((editor) => (
-                <EditorChip
-                    key={editor.clientId}
-                    editor={editor}
-                />
-            ))}
-            <span className={cx('grow')}/>
-            <span>
+        <span className={cx('notes-meta')}>
+            {people.length > 1 && (
+                <span
+                    className={cx('editor-dots')}
+                    role='group'
+                    aria-label={intl.formatMessage({id: 'notes.editors.count', defaultMessage: '{count} editing'}, {count: people.length})}
+                >
+                    {people.slice(0, MAX_DOTS).map((editor) => (
+                        <EditorDot
+                            key={editor.clientId}
+                            editor={editor}
+                        />
+                    ))}
+                    {people.length > MAX_DOTS && <span className={cx('editor-dot', 'editor-more')}>{`+${people.length - MAX_DOTS}`}</span>}
+                </span>
+            )}
+            <span
+                className={cx('notes-status')}
+                role='status'
+            >
                 <StatusText
                     status={status}
                     readOnly={readOnly}
                 />
-                {people.length > 1 && (
-                    <>
-                        {' · '}
-                        <FormattedMessage
-                            id='notes.editors.count'
-                            defaultMessage='{count} editing'
-                            values={{count: people.length}}
-                        />
-                    </>
-                )}
             </span>
-        </div>
+        </span>
     );
 }

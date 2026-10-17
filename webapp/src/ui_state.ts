@@ -64,6 +64,29 @@ export function setShowPanel(show: () => void) {
     showPanel = show;
 }
 
+// The notes app draws its header in the panel's header (the title it gives the host is NotesHeader): the row of
+// the panel's header where the list and the open note put their title and actions, while it's shown.
+let headSlot: HTMLElement | null = null;
+
+export function setHeadSlot(element: HTMLElement) {
+    if (headSlot !== element) {
+        headSlot = element;
+        listeners.forEach((l) => l());
+    }
+}
+
+// clearHeadSlot forgets the header's row as it goes away, unless another one took its place.
+export function clearHeadSlot(element: HTMLElement) {
+    if (headSlot === element) {
+        headSlot = null;
+        listeners.forEach((l) => l());
+    }
+}
+
+export function useHeadSlot() {
+    return useSyncExternalStore(subscribe, () => headSlot);
+}
+
 // openNote shows a note in the notes panel.
 export function openNote(docId: string) {
     setOpenDoc(docId);

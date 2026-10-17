@@ -8,6 +8,7 @@ import {Client4} from 'mattermost-redux/client';
 
 import {events} from './client';
 import NotePost from './components/note_post';
+import NotesHeader from './components/notes_header';
 import NotesPanel from './components/notes_panel';
 import manifest from './manifest';
 import {RelayEvents} from './relay/events';
@@ -47,13 +48,15 @@ export default class Plugin implements PluginClass {
         }
         registry.registerReconnectHandler(() => events.reconnected());
 
-        // The app bar opens the notes panel; hosts without it get a channel header button.
+        // The app bar opens the notes panel; hosts without it get a channel header button. The panel's header shows
+        // the app's own header: the open note's title and actions, or the list's.
         let rhs: RightHandSidebarRegistration;
-        const appBar = registry.registerAppBarComponent?.({iconUrl: appBarIcon, tooltipText: title, rhsComponent: NotesPanel, rhsTitle: title});
+        const header = <NotesHeader/>;
+        const appBar = registry.registerAppBarComponent?.({iconUrl: appBarIcon, tooltipText: title, rhsComponent: NotesPanel, rhsTitle: header});
         if (appBar && typeof appBar === 'object') {
             rhs = appBar.rhsComponent;
         } else {
-            rhs = registry.registerRightHandSidebarComponent(NotesPanel, title);
+            rhs = registry.registerRightHandSidebarComponent(NotesPanel, header);
         }
         registry.registerChannelHeaderButtonAction(
             <Icon name='pad'/>,

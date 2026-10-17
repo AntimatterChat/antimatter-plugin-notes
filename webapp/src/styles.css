@@ -8,12 +8,34 @@
 :is(.am-app, .am-layer) .sidebar-right__body:has(> .am-notes-root) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 :is(.am-app, .am-layer) .am-notes-root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 :is(.am-app, .am-layer) .am-notes-root > .am-app-panel { overflow-y: auto; }
+/* The app's header is the panel's (NotesHeader): its title over the list, with the new note button, and the open
+   note's back button, title and actions in its place. */
+:is(.am-app, .am-layer) .am-notes-head { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; }
+:is(.am-app, .am-layer) .am-notes-head-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+:is(.am-app, .am-layer) .am-notes-head-slot { display: flex; align-items: center; gap: 2px; min-width: 0; }
+:is(.am-app, .am-layer) .am-notes-head-note .am-notes-head-slot { flex: 1; }
+:is(.am-app, .am-layer) .am-notes-head .am-notes-h-btn { width: 32px; height: 32px; }
+/* Over an open note, its back button (a chevron and the app's icon) takes the place of the panel's app icon. */
+:is(.am-app, .am-layer) .am-rhs-classic:has(.am-notes-head-note) .am-rhs-app-ic { display: none; }
+:is(.am-app, .am-layer) .am-rhs-classic:has(.am-notes-head-note):has(.am-rhs-app-ic) .sidebar--right__title { padding-left: 0; }
+:is(.am-app, .am-layer) .am-icon-btn.am-notes-back { flex: none; width: auto; height: 32px; margin-left: -6px; padding: 0 4px 0 2px; display: flex; align-items: center; color: var(--am-muted); }
+:is(.am-app, .am-layer) .am-notes-back .am-ic:last-child { width: 18px; height: 18px; color: #A3E635; }
+:is(.am-app, .am-layer) .am-notes-scope.am-notes-scope-compact { width: 22px; padding: 0; justify-content: center; }
 :is(.am-app, .am-layer) .am-notes-bar { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid var(--am-line); }
 :is(.am-app, .am-layer) .am-notes-title { flex: 1; min-width: 0; height: 32px; padding: 0 8px; border-radius: 7px; border: 1px solid transparent; background: none; color: var(--am-text); font: 600 15px var(--am-font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
 :is(.am-app, .am-layer) input.am-notes-title:hover:not(:read-only) { border-color: var(--am-line); }
 :is(.am-app, .am-layer) input.am-notes-title:focus { outline: none; border-color: var(--am-matter); background: var(--am-main); }
 :is(.am-app, .am-layer) .am-ic.am-ic-back { transform: rotate(90deg); }
 :is(.am-app, .am-layer) .am-pad-tools .am-grow { flex: 1; }
+/* The one row under the header: the formatting tools (for those who can edit), then who's editing and whether it's
+   saved; on a narrow panel, these go under the tools. */
+:is(.am-app, .am-layer) .am-notes-tools-row { flex: none; flex-wrap: wrap; align-items: center; row-gap: 4px; min-height: 41px; padding: 6px 10px; }
+:is(.am-app, .am-layer) .am-notes-tools { display: flex; flex-wrap: wrap; gap: 2px; }
+:is(.am-app, .am-layer) .am-notes-meta { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; color: var(--am-muted); }
+:is(.am-app, .am-layer) .am-notes-status { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+:is(.am-app, .am-layer) .am-editor-dots { flex: none; display: flex; padding-left: 4px; }
+:is(.am-app, .am-layer) .am-editor-dot { display: grid; place-items: center; width: 22px; height: 22px; margin-left: -4px; border-radius: 50%; background: var(--am-c, var(--am-side)); box-shadow: 0 0 0 2px var(--am-main); color: #fff; font: 700 10.5px var(--am-font-ui); }
+:is(.am-app, .am-layer) .am-editor-dot.am-editor-more { background: var(--am-side); color: var(--am-text-2); }
 :is(.am-app, .am-layer) .am-pad-tools button.am-on { background: var(--am-matter-soft); color: var(--am-matter); }
 :is(.am-app, .am-layer) .am-pad-tools button:disabled { opacity: .4; pointer-events: none; }
 :is(.am-app, .am-layer) .am-notes-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -38,7 +60,7 @@
 :is(.am-app, .am-layer) .am-notes-error { margin: 10px 12px; padding: 8px 10px; border-radius: 8px; background: rgba(242, 63, 67, 0.12); color: var(--am-danger); font-size: 13px; }
 :is(.am-app, .am-layer) .am-notes-notice { margin: 6px 12px 0; padding: 6px 10px; border-radius: 8px; background: var(--am-side); color: var(--am-text-2); font-size: 12.5px; text-align: left; }
 :is(.am-app, .am-layer) .am-notes-menu-wrap { position: relative; }
-:is(.am-app, .am-layer) .am-notes-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; width: 220px; display: grid; gap: 1px; padding: 6px; border-radius: 12px; background: var(--am-raise); border: 1px solid var(--am-line); box-shadow: var(--am-shadow); }
+:is(.am-app, .am-layer) .am-notes-menu { position: fixed; z-index: 10000; width: 220px; display: grid; gap: 1px; padding: 6px; border-radius: 12px; background: var(--am-raise); border: 1px solid var(--am-line); box-shadow: var(--am-shadow); }
 :is(.am-app, .am-layer) .am-notes-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; border-radius: 7px; text-align: left; font-size: 13.5px; color: var(--am-text); }
 :is(.am-app, .am-layer) .am-notes-menu button:hover { background: var(--am-matter); color: #fff; }
 :is(.am-app, .am-layer) .am-notes-menu button.am-danger { color: var(--am-danger); }
@@ -89,19 +111,33 @@
 .amn-notes-empty { padding: 10px 12px; color: rgba(var(--center-channel-color-rgb), 0.64); font-size: 13px; }
 .amn-notes-error { margin: 10px 12px; padding: 8px 10px; border-radius: 4px; background: rgba(var(--error-text-color-rgb), 0.08); color: var(--error-text); font-size: 13px; }
 .amn-notes-notice { margin: 6px 12px 0; padding: 6px 10px; border-radius: 4px; background: rgba(var(--center-channel-color-rgb), 0.06); font-size: 12.5px; text-align: left; }
+.amn-notes-head { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; color: var(--center-channel-color); }
+.amn-notes-head button { border: none; background: none; color: inherit; cursor: pointer; }
+.amn-notes-head .icon { font-size: 18px; }
+.amn-notes-head-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.amn-notes-head-slot { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.amn-notes-head-note .amn-notes-head-slot { flex: 1; }
+.amn-notes-head .amn-notes-h-btn { width: 32px; height: 32px; }
+.amn-icon-btn.amn-notes-back { flex: none; width: auto; margin-left: -8px; padding: 0 4px 0 2px; display: flex; align-items: center; }
+.amn-notes-back .icon:last-child { color: #65A30D; }
+.amn-notes-scope.amn-notes-scope-compact { width: 22px; padding: 0; justify-content: center; }
 .amn-pad-wrap { flex: 1; display: flex; flex-direction: column; height: 100%; min-height: 0; }
 .amn-notes-bar { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-bottom: 1px solid rgba(var(--center-channel-color-rgb), 0.12); }
 .amn-notes-title { flex: 1; min-width: 0; height: 32px; padding: 0 8px; border-radius: 4px; border: 1px solid transparent; background: none; color: var(--center-channel-color); font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
 input.amn-notes-title:hover:not(:read-only) { border-color: rgba(var(--center-channel-color-rgb), 0.16); }
 input.amn-notes-title:focus { outline: none; border-color: var(--button-bg); }
-.amn-pad-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; border-bottom: 1px solid rgba(var(--center-channel-color-rgb), 0.12); font-size: 12px; color: rgba(var(--center-channel-color-rgb), 0.64); }
-.amn-editor-chip { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 7px 0 3px; border-radius: 11px; background: rgba(var(--center-channel-color-rgb), 0.06); font-size: 12px; font-weight: 600; color: var(--center-channel-color); }
-.amn-editor-chip i { width: 16px; height: 16px; border-radius: 50%; background: var(--c); }
 .amn-pad-tools { display: flex; gap: 2px; padding: 4px 8px; border-bottom: 1px solid rgba(var(--center-channel-color-rgb), 0.12); }
 .amn-pad-tools button { width: 30px; height: 28px; border-radius: 4px; display: grid; place-items: center; color: rgba(var(--center-channel-color-rgb), 0.64); }
 .amn-pad-tools button:hover { background: rgba(var(--center-channel-color-rgb), 0.08); color: var(--center-channel-color); }
 .amn-pad-tools button.amn-on { background: rgba(var(--button-bg-rgb), 0.08); color: var(--button-bg); }
 .amn-pad-tools button:disabled { opacity: .4; pointer-events: none; }
+.amn-notes-tools-row { flex: none; flex-wrap: wrap; align-items: center; row-gap: 4px; min-height: 37px; }
+.amn-notes-tools { display: flex; flex-wrap: wrap; gap: 2px; }
+.amn-notes-meta { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; color: rgba(var(--center-channel-color-rgb), 0.64); }
+.amn-notes-status { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.amn-editor-dots { flex: none; display: flex; padding-left: 4px; }
+.amn-editor-dot { display: grid; place-items: center; width: 22px; height: 22px; margin-left: -4px; border-radius: 50%; background: var(--c, rgba(var(--center-channel-color-rgb), 0.16)); box-shadow: 0 0 0 2px var(--center-channel-bg); color: #fff; font-size: 10.5px; font-weight: 700; }
+.amn-editor-dot.amn-editor-more { background: rgba(var(--center-channel-color-rgb), 0.12); color: var(--center-channel-color); }
 .amn-notes-content { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .amn-pad { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px 30px; outline: none; font-size: 14px; line-height: 1.6; }
 .amn-pad h1, .amn-pad h2 { margin: 0 0 6px; font-size: 18px; font-weight: 600; }
@@ -122,8 +158,9 @@ input.amn-notes-title:focus { outline: none; border-color: var(--button-bg); }
 .amn-rcaret { display: inline-block; position: relative; width: 2px; height: 1.2em; margin: 0 -1px; vertical-align: -0.2em; background: var(--c); pointer-events: none; }
 .amn-rcaret::after { content: attr(data-name); position: absolute; left: 0; top: -15px; padding: 0 4px; border-radius: 3px 3px 3px 0; background: var(--c); color: #fff; font-size: 9.5px; font-weight: 700; line-height: 14px; white-space: nowrap; }
 .amn-notes-menu-wrap { position: relative; }
-.amn-notes-menu { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; width: 220px; display: grid; padding: 6px 0; border-radius: 4px; background: var(--center-channel-bg); border: 1px solid rgba(var(--center-channel-color-rgb), 0.16); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); }
-.amn-notes-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 16px; text-align: left; font-size: 14px; }
+.amn-notes-menu { position: fixed; z-index: 10000; width: 220px; display: grid; padding: 6px 0; border-radius: 4px; background: var(--center-channel-bg); color: var(--center-channel-color); border: 1px solid rgba(var(--center-channel-color-rgb), 0.16); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); }
+.amn-notes-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 6px 16px; border: none; background: none; color: inherit; cursor: pointer; text-align: left; font-size: 14px; }
+.amn-notes-menu .icon { font-size: 18px; }
 .amn-notes-menu button:hover { background: rgba(var(--center-channel-color-rgb), 0.08); }
 .amn-notes-menu button.amn-danger { color: var(--error-text); }
 .amn-notes-history { flex: 1; min-height: 0; display: flex; flex-direction: column; }

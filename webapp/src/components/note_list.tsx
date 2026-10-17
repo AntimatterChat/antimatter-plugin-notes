@@ -16,6 +16,7 @@ import {cx} from '../ui/web_ui';
 import {setListView, setOpenDoc, useListView} from '../ui_state';
 
 import {useDisplayName} from './hooks';
+import {HeadPortal} from './notes_header';
 import RelativeTime from './relative_time';
 import ScopeChip from './scope';
 
@@ -55,47 +56,33 @@ function NoteRow({doc, showScope = false}: {doc: Doc; showScope?: boolean}) {
 
 type SectionProps = {
     showScope?: boolean;
-    title: React.ReactNode;
     docs: Doc[] | null;
     empty: React.ReactNode;
-    canCreate: boolean;
-    onCreate: () => void;
-    createLabel: string;
 };
 
-function Section({title, docs, empty, canCreate, onCreate, createLabel, showScope = false}: SectionProps) {
+// Section lists the notes of the view picked above it: the panel's header says it's the notes, the view's tab
+// which ones.
+function Section({docs, empty, showScope = false}: SectionProps) {
+    if (!docs?.length) {
+        return <div className={cx('notes-empty')}>{docs ? empty : '…'}</div>;
+    }
     return (
         <>
-            <div className={cx('app-h')}>
-                <span className={cx('grow')}>{title}</span>
-                {canCreate && (
-                    <button
-                        className={cx('icon-btn', 'notes-h-btn')}
-                        title={createLabel}
-                        aria-label={createLabel}
-                        onClick={onCreate}
-                    >
-                        <Icon
-                            name='plus'
-                            size='sm'
-                        />
-                    </button>
-                )}
-            </div>
-            {docs?.length ? docs.map((doc) => (
+            {docs.map((doc) => (
                 <NoteRow
                     key={doc.id}
                     doc={doc}
                     showScope={showScope}
                 />
-            )) : <div className={cx('notes-empty')}>{docs ? empty : '…'}</div>}
+            ))}
         </>
     );
 }
 
 const byUpdate = (a: Doc, b: Doc) => b.update_at - a.update_at;
 
-// NoteList lists the notes of the current channel and the user's personal notes.
+// NoteList lists the notes of the current channel, the user's favorites or their personal notes, with the button
+// adding one in the panel's header.
 export default function NoteList({channel}: {channel?: Channel}) {
     const intl = useIntl();
     const me = useSelector(getCurrentUserId);
@@ -162,8 +149,31 @@ export default function NoteList({channel}: {channel?: Channel}) {
     const shown = channel || view === 'favorites' ? view : 'mine';
     const conversation = channel?.type === 'D' || channel?.type === 'G';
 
+    // The new note button, in the panel's header: a note of the channel in its view (unless it's archived), a
+    // personal note in yours; the favorites have none.
+    let createLabel = '';
+    if (shown === 'channel' && channel && !archived) {
+        createLabel = intl.formatMessage({id: 'notes.list.new_channel', defaultMessage: 'New note in this channel'});
+    } else if (shown === 'mine') {
+        createLabel = intl.formatMessage({id: 'notes.list.new_personal', defaultMessage: 'New personal note'});
+    }
+
     return (
         <div className={cx('app-panel', 'notes-list')}>
+            {createLabel && (
+                <HeadPortal>
+                    <span className={cx('grow')}/>
+                    <button
+                        type='button'
+                        className={cx('icon-btn', 'notes-h-btn')}
+                        title={createLabel}
+                        aria-label={createLabel}
+                        onClick={() => create(shown === 'mine')}
+                    >
+                        <Icon name='plus'/>
+                    </button>
+                </HeadPortal>
+            )}
             {channel && (
                 <div
                     className={cx('seg', 'notes-seg')}
@@ -174,6 +184,7 @@ export default function NoteList({channel}: {channel?: Channel}) {
                         role='tab'
                         aria-selected={shown === 'channel'}
                         className={shown === 'channel' ? cx('on') : ''}
+                        title={intl.formatMessage({id: 'notes.list.channel', defaultMessage: 'Shared with {channel}'}, {channel: channelName})}
                         onClick={() => setListView('channel')}
                     >
                         {conversation ? (
@@ -205,6 +216,7 @@ export default function NoteList({channel}: {channel?: Channel}) {
                         role='tab'
                         aria-selected={shown === 'mine'}
                         className={shown === 'mine' ? cx('on') : ''}
+                        title={intl.formatMessage({id: 'notes.list.personal', defaultMessage: 'Personal notes'})}
                         onClick={() => setListView('mine')}
                     >
                         <FormattedMessage
@@ -217,12 +229,6 @@ export default function NoteList({channel}: {channel?: Channel}) {
             {error && <div className={cx('notes-error')}>{error}</div>}
             {shown === 'favorites' && (
                 <Section
-                    title={
-                        <FormattedMessage
-                            id='notes.list.favorites'
-                            defaultMessage='Favorites'
-                        />
-                    }
                     docs={favoriteDocs}
                     empty={
                         <FormattedMessage
@@ -230,21 +236,11 @@ export default function NoteList({channel}: {channel?: Channel}) {
                             defaultMessage='Star a note to find it here, wherever it is.'
                         />
                     }
-                    canCreate={false}
-                    onCreate={() => null}
-                    createLabel=''
                     showScope={true}
                 />
             )}
             {shown === 'channel' && channel && (
                 <Section
-                    title={
-                        <FormattedMessage
-                            id='notes.list.channel'
-                            defaultMessage='Shared with {channel}'
-                            values={{channel: channelName}}
-                        />
-                    }
                     docs={channelDocs}
                     empty={
                         <FormattedMessage
@@ -252,19 +248,10 @@ export default function NoteList({channel}: {channel?: Channel}) {
                             defaultMessage='No notes here yet. Notes added here can be edited by every member of the channel.'
                         />
                     }
-                    canCreate={!archived}
-                    onCreate={() => create(false)}
-                    createLabel={intl.formatMessage({id: 'notes.list.new_channel', defaultMessage: 'New note in this channel'})}
                 />
             )}
             {shown === 'mine' && (
                 <Section
-                    title={
-                        <FormattedMessage
-                            id='notes.list.personal'
-                            defaultMessage='Personal notes'
-                        />
-                    }
                     docs={personalDocs}
                     empty={
                         <FormattedMessage
@@ -272,9 +259,6 @@ export default function NoteList({channel}: {channel?: Channel}) {
                             defaultMessage='Only you can see your personal notes.'
                         />
                     }
-                    canCreate={true}
-                    onCreate={() => create(true)}
-                    createLabel={intl.formatMessage({id: 'notes.list.new_personal', defaultMessage: 'New personal note'})}
                 />
             )}
         </div>

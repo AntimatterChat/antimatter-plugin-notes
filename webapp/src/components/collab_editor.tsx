@@ -29,18 +29,17 @@ type ToolProps = {
     icon: IconName;
     label: string;
     active?: boolean;
-    disabled?: boolean;
     onClick: () => void;
 };
 
-function Tool({icon, label, active, disabled, onClick}: ToolProps) {
+function Tool({icon, label, active, onClick}: ToolProps) {
     return (
         <button
+            type='button'
             className={cx(active && 'on')}
             title={label}
             aria-label={label}
             aria-pressed={active}
-            disabled={disabled}
             onMouseDown={(e) => e.preventDefault()}
             onClick={onClick}
         >
@@ -49,7 +48,8 @@ function Tool({icon, label, active, disabled, onClick}: ToolProps) {
     );
 }
 
-function Toolbar({editor, editable}: {editor: Editor; editable: boolean}) {
+// Toolbar formats the note: shown only to those who can edit it.
+function Toolbar({editor}: {editor: Editor}) {
     const {formatMessage} = useIntl();
     const state = useEditorState({
         editor,
@@ -67,7 +67,7 @@ function Toolbar({editor, editable}: {editor: Editor; editable: boolean}) {
 
     return (
         <div
-            className={cx('pad-tools')}
+            className={cx('notes-tools')}
             role='toolbar'
             aria-label={formatMessage({id: 'notes.toolbar', defaultMessage: 'Formatting'})}
         >
@@ -75,56 +75,47 @@ function Toolbar({editor, editable}: {editor: Editor; editable: boolean}) {
                 icon='bold'
                 label={formatMessage({id: 'notes.toolbar.bold', defaultMessage: 'Bold'})}
                 active={state.bold}
-                disabled={!editable}
                 onClick={run((c) => c.toggleBold())}
             />
             <Tool
                 icon='italic'
                 label={formatMessage({id: 'notes.toolbar.italic', defaultMessage: 'Italic'})}
                 active={state.italic}
-                disabled={!editable}
                 onClick={run((c) => c.toggleItalic())}
             />
             <Tool
                 icon='strike'
                 label={formatMessage({id: 'notes.toolbar.strike', defaultMessage: 'Strikethrough'})}
                 active={state.strike}
-                disabled={!editable}
                 onClick={run((c) => c.toggleStrike())}
             />
             <Tool
                 icon='heading'
                 label={formatMessage({id: 'notes.toolbar.heading', defaultMessage: 'Heading'})}
                 active={state.heading}
-                disabled={!editable}
                 onClick={run((c) => c.toggleHeading({level: 3}))}
             />
             <Tool
                 icon='ul'
                 label={formatMessage({id: 'notes.toolbar.bullet_list', defaultMessage: 'Bulleted list'})}
                 active={state.bulletList}
-                disabled={!editable}
                 onClick={run((c) => c.toggleBulletList())}
             />
             <Tool
                 icon='ol'
                 label={formatMessage({id: 'notes.toolbar.ordered_list', defaultMessage: 'Numbered list'})}
                 active={state.orderedList}
-                disabled={!editable}
                 onClick={run((c) => c.toggleOrderedList())}
             />
             <Tool
                 icon='checkbox'
                 label={formatMessage({id: 'notes.toolbar.checklist', defaultMessage: 'Checklist item'})}
                 active={state.taskList}
-                disabled={!editable}
                 onClick={run((c) => c.toggleTaskList())}
             />
-            <span className={cx('grow')}/>
             <Tool
                 icon='undo'
                 label={formatMessage({id: 'notes.toolbar.undo', defaultMessage: 'Undo'})}
-                disabled={!editable}
                 onClick={run((c) => c.undo())}
             />
         </div>
@@ -139,11 +130,14 @@ type Props = {
     // The channel of the note, "" for a personal note
     channelId: string;
     onEditor: (editor: Editor | null) => void;
+
+    // Shown at the end of the toolbar's row: who's editing, and whether it's saved
+    meta?: React.ReactNode;
 };
 
 // CollabEditor is the rich text editor of a note, bound to its Yjs document, with the carets and
-// selections of the other editors.
-export default function CollabEditor({session, user, editable, channelId, onEditor}: Props) {
+// selections of the other editors, under one slim row: the formatting tools for those who can edit, and the meta.
+export default function CollabEditor({session, user, editable, channelId, onEditor, meta}: Props) {
     const {formatMessage} = useIntl();
     const mentions = useMentions(channelId, formatMessage({id: 'notes.mention.none', defaultMessage: 'No one by that name'}));
     const editor = useEditor({
@@ -176,19 +170,18 @@ export default function CollabEditor({session, user, editable, channelId, onEdit
         return () => onEditor(null);
     }, [editor, onEditor]);
 
-    if (!editor) {
-        return null;
-    }
     return (
         <>
-            <Toolbar
-                editor={editor}
-                editable={editable}
-            />
-            <EditorContent
-                editor={editor}
-                className={cx('notes-content')}
-            />
+            <div className={cx('pad-tools', 'notes-tools-row')}>
+                {editor && editable && <Toolbar editor={editor}/>}
+                {meta}
+            </div>
+            {editor && (
+                <EditorContent
+                    editor={editor}
+                    className={cx('notes-content')}
+                />
+            )}
         </>
     );
 }
