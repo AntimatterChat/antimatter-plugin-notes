@@ -26,7 +26,7 @@ describe('the panel state', () => {
     });
 
     test("is the channel's list for no state, or one it didn't write", () => {
-        expect(parsePanelState(undefined)).toBeNull();
+        expect(parsePanelState(null)).toBeNull();
         expect(parsePanelState('')).toBeNull();
         for (const state of ['note', 'note/', 'note/../admin', 'note/n1/edit', 'note/n1/history/x', 'note/a b', 'list/all', 'list', 'board/b1', `note/${'a'.repeat(65)}`]) {
             expect(parsePanelState(state)).toBeNull();
