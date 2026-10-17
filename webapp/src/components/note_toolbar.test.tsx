@@ -11,9 +11,8 @@ import type {Channel} from '@mattermost/types/channels';
 
 import {client} from '../client';
 import type {Doc} from '../relay/client';
-import {clearHeadSlot, setHeadSlot, setListView, setOpenDoc, useHeadSlot} from '../ui_state';
+import {setListView, setOpenDoc} from '../ui_state';
 
-import NotesHeader from './notes_header';
 import NotesPanel from './notes_panel';
 
 jest.mock('mattermost-redux/client', () => ({Client4: {getProfilesByIds: jest.fn(() => Promise.resolve([])), autocompleteUsers: jest.fn()}}));
@@ -96,17 +95,11 @@ function storeWith(channel: Channel | null) {
     return createStore(() => state);
 }
 
-// renderApp renders the notes app as the host does: the app's title (NotesHeader) in the panel's header, and the
-// panel under it. Without the header, it's a host that doesn't show the app's title.
-function renderApp({channel = townSquare, withHeader = true}: {channel?: Channel | null; withHeader?: boolean} = {}) {
+// renderApp renders the notes panel as the host does, under the host's header (which only names the app).
+function renderApp({channel = townSquare}: {channel?: Channel | null} = {}) {
     render(
         <Provider store={storeWith(channel)}>
             <IntlProvider locale='en'>
-                {withHeader && (
-                    <div data-testid='panel-header'>
-                        <NotesHeader/>
-                    </div>
-                )}
                 <div data-testid='panel'>
                     <NotesPanel/>
                 </div>
@@ -115,15 +108,15 @@ function renderApp({channel = townSquare, withHeader = true}: {channel?: Channel
     );
 }
 
-const header = () => within(screen.getByTestId('panel-header'));
+// The open note's toolbar, at the top of the panel; the list has none.
+const header = () => within(screen.getByTestId('notes-toolbar'));
+const noToolbar = () => expect(screen.queryByTestId('notes-toolbar')).not.toBeInTheDocument();
 
 // The header row of the list's view, under its tabs
 const sectionHead = () => screen.getByTestId('notes-section-head');
 
 // Helpers in act, and the text of an element (the tests' callbacks nest no deeper)
 const focus = (element: HTMLElement) => act(() => element.focus());
-const slotTo = (element: HTMLElement) => act(() => setHeadSlot(element));
-const unslot = (element: HTMLElement) => act(() => clearHeadSlot(element));
 const textOf = (element: Element) => element.textContent;
 const panel = () => within(screen.getByTestId('panel'));
 
@@ -141,11 +134,11 @@ beforeEach(() => {
 });
 
 describe('the list', () => {
-    test("has the app's name in the panel's header, and the new note button in the view's header row, under the tabs", async () => {
+    test("has no toolbar of its own (the host's header names the app), and the new note button in the view's header row, under the tabs", async () => {
         mocked.createDoc.mockResolvedValue({...note, id: 'n2', title: ''});
         renderApp();
 
-        expect(header().getByText('Notes')).toBeInTheDocument();
+        noToolbar();
         expect(await panel().findByText('No notes here yet')).toBeInTheDocument();
         const add = panel().getByRole('button', {name: 'New note in this channel'});
 
@@ -153,15 +146,13 @@ describe('the list', () => {
         expect(sectionHead()).toContainElement(add);
         expect(sectionHead()).toHaveTextContent('Shared with Town Square');
         expect(sectionHead().previousElementSibling).toBe(panel().getByRole('tablist'));
-        expect(header().queryByRole('button', {name: /New/})).not.toBeInTheDocument();
         expect(panel().getByRole('tab', {name: 'This channel'})).not.toHaveAttribute('title');
 
         fireEvent.click(add);
         expect(mocked.createDoc).toHaveBeenCalledWith('', 'c1');
 
-        // The new note opens, its title in the header
+        // The new note opens, its title in its toolbar
         expect(await header().findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
-        expect(header().queryByText('Notes')).not.toBeInTheDocument();
     });
 
     test('adds a personal note from your notes, none from the favorites', async () => {
@@ -211,7 +202,7 @@ describe('the list', () => {
 });
 
 describe('an open note', () => {
-    test("shows back, its title, where it's shared, the star and its actions in the panel's header", async () => {
+    test("shows back, its title, where it's shared, the star and its actions in its toolbar, at the top of the panel", async () => {
         setOpenDoc('n1');
         renderApp();
 
@@ -222,9 +213,11 @@ describe('an open note', () => {
         expect(header().getByRole('button', {name: 'Add to favourites'})).toBeInTheDocument();
         expect(header().getByRole('button', {name: 'Note actions'})).toBeInTheDocument();
 
-        // Not a second time in the panel: under the header, only the editor and its toolbar's row
-        expect(panel().queryByRole('textbox', {name: 'Title'})).not.toBeInTheDocument();
-        expect(panel().queryByRole('button', {name: 'All notes'})).not.toBeInTheDocument();
+        // Once, in the panel, over the editor and its toolbar's row
+        expect(panel().getAllByRole('textbox', {name: 'Title'})).toHaveLength(1);
+        expect(panel().getAllByRole('button', {name: 'All notes'})).toHaveLength(1);
+        const toolbar = screen.getByTestId('notes-toolbar');
+        expect(toolbar.compareDocumentPosition(panel().getByTestId('editor')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         expect(panel().getByTestId('editor')).toHaveAttribute('data-editable', 'true');
         expect(within(panel().getByTestId('editor')).getByRole('status')).toHaveTextContent('Saved');
     });
@@ -254,20 +247,20 @@ describe('an open note', () => {
         renderApp();
 
         fireEvent.click(await header().findByRole('button', {name: 'All notes'}));
-        expect(header().getByText('Notes')).toBeInTheDocument();
+        noToolbar();
         expect(await panel().findByText('No notes here yet')).toBeInTheDocument();
         expect(panel().getByRole('button', {name: 'New note in this channel'})).toBeInTheDocument();
         expect(panel().queryByTestId('editor')).not.toBeInTheDocument();
     });
 
-    test('opens its actions over the page, as the header clips what overflows it', async () => {
+    test('opens its actions over the page, as the toolbar clips what overflows it', async () => {
         setOpenDoc('n1');
         renderApp();
 
         const actions = await header().findByRole('button', {name: 'Note actions'});
         fireEvent.click(actions);
         const menu = screen.getByRole('menu', {name: 'Note actions'});
-        expect(screen.getByTestId('panel-header')).not.toContainElement(menu);
+        expect(screen.getByTestId('notes-toolbar')).not.toContainElement(menu);
         expect(within(menu).getAllByRole('menuitem').map(textOf)).toEqual(['Export as Markdown', 'Share in the channel', 'Version history', 'Delete']);
         expect(actions).toHaveAttribute('aria-expanded', 'true');
 
@@ -309,7 +302,7 @@ describe('an open note', () => {
         // The classic UI keeps the browser's confirmation
         expect(confirm).toHaveBeenCalledWith('Delete "Plan"?\n\nIt\'s deleted for everyone. This can\'t be undone.');
         await waitFor(() => expect(mocked.deleteDoc).toHaveBeenCalledWith('n1'));
-        expect(await header().findByText('Notes')).toBeInTheDocument();
+        await waitFor(noToolbar);
         confirm.mockRestore();
     });
 
@@ -331,9 +324,9 @@ describe('an open note', () => {
         expect(await header().findByRole('img', {name: 'Personal: only you can see it'})).toBeInTheDocument();
     });
 
-    test("is still reachable on a host that doesn't show the app's title: its header tops the panel", async () => {
+    test("is in the panel whatever the host's header: its toolbar tops the panel", async () => {
         setOpenDoc('n1');
-        renderApp({withHeader: false});
+        renderApp();
 
         expect(await panel().findByRole('textbox', {name: 'Title'})).toHaveValue('Plan');
         expect(panel().getByRole('button', {name: 'All notes'})).toBeInTheDocument();
@@ -347,27 +340,14 @@ describe('an open note', () => {
 
         expect(await panel().findByText("This note was deleted, or you can't open it.")).toBeInTheDocument();
         fireEvent.click(header().getByRole('button', {name: 'All notes'}));
-        expect(header().getByText('Notes')).toBeInTheDocument();
+        noToolbar();
     });
-});
 
-describe("the header's row", () => {
-    function Slot() {
-        const slot = useHeadSlot();
-        return <span data-testid='slot'>{slot ? slot.id : 'none'}</span>;
-    }
+    test("its back button is a chevron alone: the host's header has the app's icon", async () => {
+        setOpenDoc('n1');
+        renderApp();
 
-    test('is forgotten when it goes away, unless another one took its place', () => {
-        render(<Slot/>);
-        const first = Object.assign(document.createElement('span'), {id: 'first'});
-        const second = Object.assign(document.createElement('span'), {id: 'second'});
-
-        slotTo(first);
-        expect(screen.getByTestId('slot')).toHaveTextContent('first');
-        slotTo(second);
-        unslot(first);
-        expect(screen.getByTestId('slot')).toHaveTextContent('second');
-        unslot(second);
-        expect(screen.getByTestId('slot')).toHaveTextContent('none');
+        const back = await header().findByRole('button', {name: 'All notes'});
+        expect(back.querySelectorAll('svg, i, img')).toHaveLength(1);
     });
 });

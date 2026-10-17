@@ -16,7 +16,6 @@ import {setListView, setOpenDoc} from '../ui_state';
 
 import {FUSION_LAYER_ID} from './fusion/fusion_ui';
 import NotePost from './note_post';
-import NotesHeader from './notes_header';
 import NotesPanel from './notes_panel';
 
 // Notes under the Fusion UI: its confirmation dialog, its tooltips, its empty states and the app's colour.
@@ -113,9 +112,6 @@ function renderApp(channel?: Channel) {
     render(
         <Provider store={store(channel)}>
             <IntlProvider locale='en'>
-                <div data-testid='panel-header'>
-                    <NotesHeader/>
-                </div>
                 <div data-testid='panel'>
                     <NotesPanel/>
                 </div>
@@ -124,10 +120,12 @@ function renderApp(channel?: Channel) {
     );
 }
 
-const header = () => within(screen.getByTestId('panel-header'));
+// The open note's toolbar, at the top of the panel; the list has none.
+const header = () => within(screen.getByTestId('notes-toolbar'));
+const noToolbar = () => expect(screen.queryByTestId('notes-toolbar')).not.toBeInTheDocument();
 const panel = () => within(screen.getByTestId('panel'));
 const sectionHead = () => within(screen.getByTestId('notes-section-head'));
-const titled = () => Array.from(document.querySelectorAll('[data-testid="panel-header"] [title], [data-testid="panel"] [title]'));
+const titled = () => Array.from(document.querySelectorAll('[data-testid="panel"] [title]'));
 
 let layer: HTMLElement;
 
@@ -177,7 +175,7 @@ describe('deleting a note under Fusion', () => {
         expect(confirm).toHaveClass('am-btn', 'am-danger');
         fireEvent.click(confirm);
         await waitFor(() => expect(mocked.deleteDoc).toHaveBeenCalledWith('n1'));
-        expect(await header().findByText('Notes')).toBeInTheDocument();
+        await waitFor(noToolbar);
 
         expect(browserConfirm).not.toHaveBeenCalled();
         browserConfirm.mockRestore();
@@ -203,7 +201,7 @@ describe('tooltips under Fusion', () => {
         await panel().findByText('No notes here yet');
         const add = sectionHead().getByRole('button', {name: 'New note in this channel'});
         expect(add).toHaveAttribute('data-am-tip', 'New note in this channel');
-        expect(header().queryByRole('button')).toBeNull();
+        noToolbar();
         expect(titled()).toEqual([]);
     });
 

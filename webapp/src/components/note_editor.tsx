@@ -29,7 +29,7 @@ import EmptyState from './fusion/empty_state';
 import {iconTip} from './fusion/tip';
 import Menu, {type MenuItem} from './menu';
 import NoteHistory from './note_history';
-import {HeadPortal} from './notes_header';
+import {NoteToolbar} from './note_toolbar';
 import ScopeChip, {FavoriteButton} from './scope';
 
 function download(filename: string, text: string) {
@@ -133,8 +133,8 @@ type Props = {
     onViewChange?: (docId: string, view: 'edit' | 'history') => void;
 };
 
-// NoteEditor shows an open note: its title and its actions in the panel's header, the editor under its toolbar, and
-// who's editing.
+// NoteEditor shows an open note: its title and its actions in its toolbar at the top of the panel, the editor under
+// its formatting tools, and who's editing.
 export default function NoteEditor({docId, initialView = 'edit', onViewChange}: Props) {
     const intl = useIntl();
     const me = useSelector(getCurrentUser);
@@ -174,8 +174,7 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
         }
     }), [docId]);
 
-    // Back to the list, or from the versions to the note: the chevron and the app's icon, where the panel's header
-    // shows the app's icon over the list.
+    // Back to the list, or from the versions to the note: a chevron (the host's header above has the app's icon).
     const back = (
         <button
             type='button'
@@ -184,7 +183,6 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
             onClick={() => (view === 'history' ? setView('edit') : setOpenDoc(null))}
         >
             <Icon name='chev'/>
-            <Icon name='pad'/>
         </button>
     );
 
@@ -193,7 +191,7 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
     if (failure || !doc || !session) {
         return (
             <div className={cx('pad-wrap')}>
-                <HeadPortal>{back}</HeadPortal>
+                <NoteToolbar>{back}</NoteToolbar>
                 {failure ? (
                     <EmptyState
                         tone='danger'
@@ -300,11 +298,11 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
         />
     );
 
-    // One header, the panel's: back, the title, where it's shared, the star and the actions. Under it, one slim row:
-    // the formatting tools (for those who can edit), who's editing and whether it's saved.
+    // The note's toolbar, under the host's header: back, the title, where it's shared, the star and the actions. Under
+    // it, one slim row: the formatting tools (for those who can edit), who's editing and whether it's saved.
     return (
         <div className={cx('pad-wrap')}>
-            <HeadPortal>
+            <NoteToolbar>
                 {back}
                 {view === 'history' ? (
                     <span className={cx('notes-title')}>
@@ -329,7 +327,7 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
                     label={intl.formatMessage({id: 'notes.menu', defaultMessage: 'Note actions'})}
                     items={items}
                 />
-            </HeadPortal>
+            </NoteToolbar>
             {notice && (
                 <button
                     type='button'

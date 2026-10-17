@@ -21,7 +21,7 @@ const GAP = 4;
 const MARGIN = 8;
 
 // Menu is a button opening a small menu of actions. The menu is drawn over the page, under the button and aligned
-// with its right edge: the button sits in the panel's header, which clips what overflows it.
+// with its right edge: the button sits in the note's toolbar, which clips what overflows it.
 export default function Menu({label, items}: {label: string; items: MenuItem[]}) {
     const [open, setOpen] = useState(false);
     const ref = useRef<HTMLDivElement>(null);
