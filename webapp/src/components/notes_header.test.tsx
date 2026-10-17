@@ -30,7 +30,7 @@ jest.mock('../client', () => ({
         moveDoc: jest.fn(),
         getVersions: jest.fn(),
     },
-    events: {addDoc: () => () => undefined, addListListener: () => () => undefined},
+    events: {addDoc: () => () => null, addListListener: () => () => null},
     shareNote: jest.fn(),
     searchUsers: jest.fn(),
 }));
@@ -47,13 +47,13 @@ jest.mock('../note_session', () => ({
             return Promise.resolve();
         }
         subscribe() {
-            return () => undefined;
+            return () => null;
         }
         editors() {
             return [];
         }
         destroy() {
-            return undefined;
+            return null;
         }
     },
 }));
@@ -116,6 +116,12 @@ function renderApp({channel = townSquare, withHeader = true}: {channel?: Channel
 }
 
 const header = () => within(screen.getByTestId('panel-header'));
+
+// Helpers in act, and the text of an element (the tests' callbacks nest no deeper)
+const focus = (element: HTMLElement) => act(() => element.focus());
+const slotTo = (element: HTMLElement) => act(() => setHeadSlot(element));
+const unslot = (element: HTMLElement) => act(() => clearHeadSlot(element));
+const textOf = (element: Element) => element.textContent;
 const panel = () => within(screen.getByTestId('panel'));
 
 beforeEach(() => {
@@ -126,8 +132,8 @@ beforeEach(() => {
     mocked.listFavorites.mockResolvedValue([]);
     mocked.getDoc.mockResolvedValue(note);
     mocked.renameDoc.mockResolvedValue(note);
-    mocked.setFavorite.mockResolvedValue(undefined as never);
-    mocked.deleteDoc.mockResolvedValue(undefined as never);
+    mocked.setFavorite.mockResolvedValue(null as never);
+    mocked.deleteDoc.mockResolvedValue(null as never);
     mocked.getVersions.mockResolvedValue([]);
 });
 
@@ -160,7 +166,8 @@ describe('the list', () => {
         fireEvent.click(await header().findByRole('button', {name: 'New personal note'}));
         expect(mocked.createDoc).toHaveBeenCalledWith('', '');
 
-        act(() => setOpenDoc(null));
+        // The new note opens; back to the list
+        fireEvent.click(await header().findByRole('button', {name: 'All notes'}));
         fireEvent.click(panel().getByRole('tab', {name: 'Favorites'}));
         expect(await panel().findByText('Star a note to find it here, wherever it is.')).toBeInTheDocument();
         expect(header().queryByRole('button', {name: /New/})).not.toBeInTheDocument();
@@ -197,7 +204,7 @@ describe('an open note', () => {
         renderApp();
 
         const title = await header().findByRole('textbox', {name: 'Title'});
-        act(() => title.focus());
+        focus(title);
         fireEvent.change(title, {target: {value: 'Plan for Q4'}});
         fireEvent.keyDown(title, {key: 'Enter'});
         expect(mocked.renameDoc).toHaveBeenCalledWith('n1', 'Plan for Q4');
@@ -222,7 +229,7 @@ describe('an open note', () => {
         expect(panel().queryByTestId('editor')).not.toBeInTheDocument();
     });
 
-    test("opens its actions over the page, as the header clips what overflows it", async () => {
+    test('opens its actions over the page, as the header clips what overflows it', async () => {
         setOpenDoc('n1');
         renderApp();
 
@@ -230,7 +237,7 @@ describe('an open note', () => {
         fireEvent.click(actions);
         const menu = screen.getByRole('menu', {name: 'Note actions'});
         expect(screen.getByTestId('panel-header')).not.toContainElement(menu);
-        expect(within(menu).getAllByRole('menuitem').map((item) => item.textContent)).toEqual(['Export as Markdown', 'Share in the channel', 'Version history', 'Delete']);
+        expect(within(menu).getAllByRole('menuitem').map(textOf)).toEqual(['Export as Markdown', 'Share in the channel', 'Version history', 'Delete']);
         expect(actions).toHaveAttribute('aria-expanded', 'true');
 
         // A click in the menu isn't a click outside it; Escape and a click outside close it
@@ -322,12 +329,12 @@ describe("the header's row", () => {
         const first = Object.assign(document.createElement('span'), {id: 'first'});
         const second = Object.assign(document.createElement('span'), {id: 'second'});
 
-        act(() => setHeadSlot(first));
+        slotTo(first);
         expect(screen.getByTestId('slot')).toHaveTextContent('first');
-        act(() => setHeadSlot(second));
-        act(() => clearHeadSlot(first));
+        slotTo(second);
+        unslot(first);
         expect(screen.getByTestId('slot')).toHaveTextContent('second');
-        act(() => clearHeadSlot(second));
+        unslot(second);
         expect(screen.getByTestId('slot')).toHaveTextContent('none');
     });
 });

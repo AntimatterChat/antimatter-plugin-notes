@@ -50,7 +50,7 @@ describe("the note's toolbar row", () => {
             user={{userId: 'me', name: 'maya', color: '#f00'}}
             editable={editable}
             channelId='c1'
-            onEditor={() => undefined}
+            onEditor={() => null}
             meta={<span data-testid='meta'>{'Saved'}</span>}
         />,
     );

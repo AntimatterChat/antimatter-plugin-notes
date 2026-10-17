@@ -25,8 +25,7 @@ export default function ScopeChip({doc, compact = false}: {doc: Doc; compact?: b
             <span
                 className={cx('notes-scope', 'notes-scope-personal', compact && 'notes-scope-compact')}
                 title={tip}
-                role={compact ? 'img' : undefined}
-                aria-label={compact ? tip : undefined}
+                {...(compact ? {role: 'img', 'aria-label': tip} : {})}
             >
                 <Icon
                     name='lock'
@@ -43,8 +42,7 @@ export default function ScopeChip({doc, compact = false}: {doc: Doc; compact?: b
         <span
             className={cx('notes-scope', 'notes-scope-shared', compact && 'notes-scope-compact')}
             title={tip}
-            role={compact ? 'img' : undefined}
-            aria-label={compact ? tip : undefined}
+            {...(compact ? {role: 'img', 'aria-label': tip} : {})}
         >
             <Icon
                 name={conversation ? 'users' : 'hash'}

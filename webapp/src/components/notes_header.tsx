@@ -17,7 +17,7 @@ export default function NotesHeader() {
 
     useLayoutEffect(() => {
         if (!slot) {
-            return undefined;
+            return () => null;
         }
         setHeadSlot(slot);
         return () => clearHeadSlot(slot);
