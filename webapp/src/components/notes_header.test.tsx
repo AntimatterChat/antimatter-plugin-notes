@@ -168,7 +168,7 @@ describe('the list', () => {
 
         // The new note opens; back to the list
         fireEvent.click(await header().findByRole('button', {name: 'All notes'}));
-        fireEvent.click(panel().getByRole('tab', {name: 'Favorites'}));
+        fireEvent.click(panel().getByRole('tab', {name: 'Favourites'}));
         expect(await panel().findByText('Star a note to find it here, wherever it is.')).toBeInTheDocument();
         expect(header().queryByRole('button', {name: /New/})).not.toBeInTheDocument();
     });
@@ -189,7 +189,7 @@ describe('an open note', () => {
         expect(title).toHaveValue('Plan');
         expect(header().getByRole('button', {name: 'All notes'})).toBeInTheDocument();
         expect(header().getByRole('img', {name: 'Shared with everyone in ~Town Square'})).toBeInTheDocument();
-        expect(header().getByRole('button', {name: 'Add to favorites'})).toBeInTheDocument();
+        expect(header().getByRole('button', {name: 'Add to favourites'})).toBeInTheDocument();
         expect(header().getByRole('button', {name: 'Note actions'})).toBeInTheDocument();
 
         // Not a second time in the panel: under the header, only the editor and its toolbar's row
@@ -214,9 +214,9 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        fireEvent.click(await header().findByRole('button', {name: 'Add to favorites'}));
+        fireEvent.click(await header().findByRole('button', {name: 'Add to favourites'}));
         expect(mocked.setFavorite).toHaveBeenCalledWith('n1', true);
-        expect(header().getByRole('button', {name: 'Remove from favorites'})).toHaveAttribute('aria-pressed', 'true');
+        expect(header().getByRole('button', {name: 'Remove from favourites'})).toHaveAttribute('aria-pressed', 'true');
     });
 
     test('goes back to the list from the header', async () => {

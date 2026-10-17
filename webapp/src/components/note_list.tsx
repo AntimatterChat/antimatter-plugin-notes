@@ -208,7 +208,7 @@ export default function NoteList({channel}: {channel?: Channel}) {
                     >
                         <FormattedMessage
                             id='notes.list.view_favorites'
-                            defaultMessage='Favorites'
+                            defaultMessage='Favourites'
                         />
                     </button>
                     <button
