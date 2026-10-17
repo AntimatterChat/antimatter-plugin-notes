@@ -8,9 +8,10 @@ import {FormattedMessage} from 'react-intl';
 import {cx} from '../ui/web_ui';
 import {clearHeadSlot, setHeadSlot, useHeadSlot, useOpenDoc} from '../ui_state';
 
-// NotesHeader is the title the notes app gives the host's panel header: "Notes" over the list, and a row where the
-// list and the open note draw their own header (the note's title, back to the list, its actions), so that the app
-// has one header, the panel's, instead of one under another.
+// NotesHeader is the title the notes app gives the host's panel header: "Notes" over the list (whose + is in the
+// header row of its view, under the tabs, as in Todo and Whiteboard), and a row where the open note draws its own
+// header (the note's title, back to the list, its actions), so that a note has one header, the panel's, instead of
+// one under another.
 export default function NotesHeader() {
     const docId = useOpenDoc();
     const [slot, setSlot] = useState<HTMLSpanElement | null>(null);

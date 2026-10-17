@@ -203,7 +203,7 @@ describe('in the main window', () => {
         // A note, and its versions
         mocked.createDoc.mockResolvedValue({...note, id: 'n2', channel_id: ''});
         mocked.getDoc.mockResolvedValue({...note, id: 'n2', channel_id: ''});
-        fireEvent.click(await header().findByRole('button', {name: 'New personal note'}));
+        fireEvent.click(await panel().findByRole('button', {name: 'New personal note'}));
         expect(await header().findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
         expect(setPanelState).toHaveBeenLastCalledWith('note/n2');
 

@@ -12,13 +12,12 @@ import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
 import {client, events} from '../client';
 import type {Doc} from '../relay/client';
 import Icon, {type IconName} from '../ui/icon';
-import {cx} from '../ui/web_ui';
+import {cx, isFusionUI} from '../ui/web_ui';
 import {setListView, setOpenDoc, useListView} from '../ui_state';
 
 import EmptyState from './fusion/empty_state';
-import {iconTip, tip} from './fusion/tip';
+import {iconTip} from './fusion/tip';
 import {useDisplayName} from './hooks';
-import {HeadPortal} from './notes_header';
 import RelativeTime from './relative_time';
 import ScopeChip from './scope';
 
@@ -27,6 +26,7 @@ function NoteRow({doc, showScope = false}: {doc: Doc; showScope?: boolean}) {
     const editor = useDisplayName(doc.updated_by || doc.creator_id);
     return (
         <button
+            type='button'
             className={cx('app-row')}
             onClick={() => setOpenDoc(doc.id)}
         >
@@ -47,7 +47,15 @@ function NoteRow({doc, showScope = false}: {doc: Doc; showScope?: boolean}) {
                     <FormattedMessage
                         id='notes.list.edited'
                         defaultMessage='Edited {when} by {name}'
-                        values={{when: <RelativeTime value={doc.update_at}/>, name: editor || '…'}}
+                        values={{
+                            when: (
+                                <RelativeTime
+                                    key='when'
+                                    value={doc.update_at}
+                                />
+                            ),
+                            name: editor || '…',
+                        }}
                     />
                 </span>
             </span>
@@ -58,53 +66,86 @@ function NoteRow({doc, showScope = false}: {doc: Doc; showScope?: boolean}) {
 
 type SectionProps = {
     showScope?: boolean;
+
+    // What the view is: "Shared with {channel}", "Favourites" or "Personal notes", on the left of its header row
+    title: React.ReactNode;
     docs: Doc[] | null;
 
-    // What the view shows without notes: an icon, a title, a sentence, and the new note button's action, if any.
-    empty: {icon: IconName; title: React.ReactNode; text: React.ReactNode; action?: {label: string; onClick: () => void}};
+    // What the view shows without notes: an icon (under Fusion), a title and a sentence.
+    empty: {icon: IconName; title: string; text: string};
+
+    // The + on the right of the header row, making a note in the view's scope: none in the favourites, nor in an
+    // archived channel. Under Fusion, the empty view also offers it as its one action.
+    create?: {label: string; onClick: () => void} | null;
 };
 
-// Section lists the notes of the view picked above it: the panel's header says it's the notes, the view's tab
-// which ones.
-function Section({docs, empty, showScope = false}: SectionProps) {
+// Section is the notes of the view picked in the tabs above it: a header row (what the view is, and the + making a
+// note there), then the notes, or the view's empty state.
+function Section({title, docs, empty, create, showScope = false}: SectionProps) {
     const intl = useIntl();
-    if (!docs) {
-        return (
-            <EmptyState
-                busy={true}
-                text={intl.formatMessage({id: 'notes.list.loading', defaultMessage: 'Loading notes…', description: 'Shown in the Notes panel while the list of notes loads.'})}
-                classicClassName={cx('notes-empty')}
+    const plusIcon = (
+        <Icon
+            name='plus'
+            size='sm'
+        />
+    );
+    let body: React.ReactNode;
+    if (docs?.length) {
+        body = docs.map((doc) => (
+            <NoteRow
+                key={doc.id}
+                doc={doc}
+                showScope={showScope}
             />
-        );
-    }
-    if (!docs.length) {
-        return (
+        ));
+    } else if (docs) {
+        body = (
             <EmptyState
                 icon={<Icon name={empty.icon}/>}
                 title={empty.title}
                 text={empty.text}
-                action={empty.action}
+                {...(create && isFusionUI() ? {action: {...create, icon: plusIcon}} : {})}
                 classicClassName={cx('notes-empty')}
+                data-testid='notes-empty'
+            />
+        );
+    } else {
+        body = (
+            <EmptyState
+                busy={true}
+                text={intl.formatMessage({id: 'notes.list.loading', defaultMessage: 'Loading notes…', description: 'Shown in the Notes panel while the list of notes loads.'})}
+                classicClassName={cx('notes-empty')}
+                data-testid='notes-empty'
             />
         );
     }
     return (
         <>
-            {docs.map((doc) => (
-                <NoteRow
-                    key={doc.id}
-                    doc={doc}
-                    showScope={showScope}
-                />
-            ))}
+            <div
+                className={cx('app-h')}
+                data-testid='notes-section-head'
+            >
+                <span className={cx('grow')}>{title}</span>
+                {create && (
+                    <button
+                        type='button'
+                        className={cx('icon-btn', 'notes-h-btn')}
+                        {...iconTip(create.label)}
+                        onClick={create.onClick}
+                    >
+                        {plusIcon}
+                    </button>
+                )}
+            </div>
+            {body}
         </>
     );
 }
 
 const byUpdate = (a: Doc, b: Doc) => b.update_at - a.update_at;
 
-// NoteList lists the notes of the current channel, the user's favorites or their personal notes, with the button
-// adding one in the panel's header.
+// NoteList lists the notes of the current channel, the user's favourites or their personal notes: the tabs, then the
+// view's header row (what it is, and the + making a note there) and its notes.
 export default function NoteList({channel}: {channel?: Channel}) {
     const intl = useIntl();
     const me = useSelector(getCurrentUserId);
@@ -166,35 +207,14 @@ export default function NoteList({channel}: {channel?: Channel}) {
     };
 
     const archived = Boolean(channel?.delete_at);
-    const channelName = channel?.type === 'D' || channel?.type === 'G' ? intl.formatMessage({id: 'notes.list.conversation', defaultMessage: 'this conversation'}) : channel?.display_name;
+    const conversation = channel?.type === 'D' || channel?.type === 'G';
+    const channelName = conversation ? intl.formatMessage({id: 'notes.list.conversation', defaultMessage: 'this conversation'}) : channel?.display_name;
 
     const shown = channel || view === 'favorites' ? view : 'mine';
-    const conversation = channel?.type === 'D' || channel?.type === 'G';
-
-    // The new note button, in the panel's header: a note of the channel in its view (unless it's archived), a
-    // personal note in yours; the favorites have none.
-    let createLabel = '';
-    if (shown === 'channel' && channel && !archived) {
-        createLabel = intl.formatMessage({id: 'notes.list.new_channel', defaultMessage: 'New note in this channel'});
-    } else if (shown === 'mine') {
-        createLabel = intl.formatMessage({id: 'notes.list.new_personal', defaultMessage: 'New personal note'});
-    }
+    const newInChannel = conversation ? intl.formatMessage({id: 'notes.list.new_conversation', defaultMessage: 'New note in this conversation', description: 'The + of the Notes panel\'s "Shared with this conversation" row, in a direct or group message.'}) : intl.formatMessage({id: 'notes.list.new_channel', defaultMessage: 'New note in this channel'});
 
     return (
         <div className={cx('app-panel', 'notes-list')}>
-            {createLabel && (
-                <HeadPortal>
-                    <span className={cx('grow')}/>
-                    <button
-                        type='button'
-                        className={cx('icon-btn', 'notes-h-btn')}
-                        {...iconTip(createLabel)}
-                        onClick={() => create(shown === 'mine')}
-                    >
-                        <Icon name='plus'/>
-                    </button>
-                </HeadPortal>
-            )}
             {channel && (
                 <div
                     className={cx('seg', 'notes-seg')}
@@ -205,7 +225,6 @@ export default function NoteList({channel}: {channel?: Channel}) {
                         role='tab'
                         aria-selected={shown === 'channel'}
                         className={shown === 'channel' ? cx('on') : ''}
-                        {...tip(intl.formatMessage({id: 'notes.list.channel', defaultMessage: 'Shared with {channel}'}, {channel: channelName}))}
                         onClick={() => setListView('channel')}
                     >
                         {conversation ? (
@@ -237,7 +256,6 @@ export default function NoteList({channel}: {channel?: Channel}) {
                         role='tab'
                         aria-selected={shown === 'mine'}
                         className={shown === 'mine' ? cx('on') : ''}
-                        {...tip(intl.formatMessage({id: 'notes.list.personal', defaultMessage: 'Personal notes'}))}
                         onClick={() => setListView('mine')}
                     >
                         <FormattedMessage
@@ -250,6 +268,7 @@ export default function NoteList({channel}: {channel?: Channel}) {
             {error && <div className={cx('notes-error')}>{error}</div>}
             {shown === 'favorites' && (
                 <Section
+                    title={intl.formatMessage({id: 'notes.list.favorites', defaultMessage: 'Favourites'})}
                     docs={favoriteDocs}
                     empty={{
                         icon: 'star',
@@ -261,24 +280,26 @@ export default function NoteList({channel}: {channel?: Channel}) {
             )}
             {shown === 'channel' && channel && (
                 <Section
+                    title={intl.formatMessage({id: 'notes.list.channel', defaultMessage: 'Shared with {channel}'}, {channel: channelName})}
                     docs={channelDocs}
                     empty={{
                         icon: 'pad',
                         title: intl.formatMessage({id: 'notes.list.channel_empty_title', defaultMessage: 'No notes here yet', description: 'Title of the Notes panel when the current channel or conversation has no notes.'}),
-                        text: intl.formatMessage({id: 'notes.list.channel_empty_text', defaultMessage: 'Every member of the channel can edit the notes added here.', description: 'Under "No notes here yet" in the Notes panel: who can edit a channel\'s notes.'}),
-                        ...(createLabel ? {action: {label: createLabel, onClick: () => create(false)}} : {}),
+                        text: conversation ? intl.formatMessage({id: 'notes.list.conversation_empty_text', defaultMessage: 'Every member of the conversation can edit the notes added here.', description: 'Under "No notes here yet" in the Notes panel, in a direct or group message: who can edit its notes.'}) : intl.formatMessage({id: 'notes.list.channel_empty_text', defaultMessage: 'Every member of the channel can edit the notes added here.', description: 'Under "No notes here yet" in the Notes panel: who can edit a channel\'s notes.'}),
                     }}
+                    create={archived ? null : {label: newInChannel, onClick: () => create(false)}}
                 />
             )}
             {shown === 'mine' && (
                 <Section
+                    title={intl.formatMessage({id: 'notes.list.personal', defaultMessage: 'Personal notes'})}
                     docs={personalDocs}
                     empty={{
                         icon: 'lock',
                         title: intl.formatMessage({id: 'notes.list.personal_empty_title', defaultMessage: 'No personal notes yet', description: 'Title of the personal ("Mine") view of the Notes panel when the person has no personal notes.'}),
                         text: intl.formatMessage({id: 'notes.list.personal_empty', defaultMessage: 'Only you can see your personal notes.'}),
-                        ...(createLabel ? {action: {label: createLabel, onClick: () => create(true)}} : {}),
                     }}
+                    create={{label: intl.formatMessage({id: 'notes.list.new_personal', defaultMessage: 'New personal note'}), onClick: () => create(true)}}
                 />
             )}
         </div>

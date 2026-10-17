@@ -117,6 +117,9 @@ function renderApp({channel = townSquare, withHeader = true}: {channel?: Channel
 
 const header = () => within(screen.getByTestId('panel-header'));
 
+// The header row of the list's view, under its tabs
+const sectionHead = () => screen.getByTestId('notes-section-head');
+
 // Helpers in act, and the text of an element (the tests' callbacks nest no deeper)
 const focus = (element: HTMLElement) => act(() => element.focus());
 const slotTo = (element: HTMLElement) => act(() => setHeadSlot(element));
@@ -138,17 +141,20 @@ beforeEach(() => {
 });
 
 describe('the list', () => {
-    test("has one header, the panel's: the app's name and the new note button", async () => {
+    test("has the app's name in the panel's header, and the new note button in the view's header row, under the tabs", async () => {
         mocked.createDoc.mockResolvedValue({...note, id: 'n2', title: ''});
         renderApp();
 
         expect(header().getByText('Notes')).toBeInTheDocument();
-        const add = await header().findByRole('button', {name: 'New note in this channel'});
+        expect(await panel().findByText('No notes here yet')).toBeInTheDocument();
+        const add = panel().getByRole('button', {name: 'New note in this channel'});
 
-        // No heading of its own under the tabs, and no second new note button
-        expect(screen.queryByText('Shared with Town Square')).not.toBeInTheDocument();
-        expect(panel().getByRole('tab', {name: 'This channel'})).toHaveAttribute('title', 'Shared with Town Square');
-        expect(panel().queryByRole('button', {name: /New/})).not.toBeInTheDocument();
+        // The row says where the view's notes are shared, the + on its right; the panel's header has no +
+        expect(sectionHead()).toContainElement(add);
+        expect(sectionHead()).toHaveTextContent('Shared with Town Square');
+        expect(sectionHead().previousElementSibling).toBe(panel().getByRole('tablist'));
+        expect(header().queryByRole('button', {name: /New/})).not.toBeInTheDocument();
+        expect(panel().getByRole('tab', {name: 'This channel'})).not.toHaveAttribute('title');
 
         fireEvent.click(add);
         expect(mocked.createDoc).toHaveBeenCalledWith('', 'c1');
@@ -163,20 +169,44 @@ describe('the list', () => {
         renderApp();
 
         fireEvent.click(panel().getByRole('tab', {name: 'Mine'}));
-        fireEvent.click(await header().findByRole('button', {name: 'New personal note'}));
+        expect(await panel().findByText('Personal notes')).toBe(sectionHead().firstElementChild);
+        fireEvent.click(within(sectionHead()).getByRole('button', {name: 'New personal note'}));
         expect(mocked.createDoc).toHaveBeenCalledWith('', '');
 
         // The new note opens; back to the list
         fireEvent.click(await header().findByRole('button', {name: 'All notes'}));
         fireEvent.click(panel().getByRole('tab', {name: 'Favourites'}));
         expect(await panel().findByText('Star a note to find it here, wherever it is.')).toBeInTheDocument();
-        expect(header().queryByRole('button', {name: /New/})).not.toBeInTheDocument();
+        expect(sectionHead()).toHaveTextContent('Favourites');
+        expect(within(sectionHead()).queryByRole('button')).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', {name: /New/})).not.toBeInTheDocument();
     });
 
     test('adds no note to an archived channel', async () => {
         renderApp({channel: {...townSquare, delete_at: 5}});
         expect(await panel().findByText(/No notes here yet/)).toBeInTheDocument();
-        expect(header().queryByRole('button', {name: /New/})).not.toBeInTheDocument();
+        expect(sectionHead()).toHaveTextContent('Shared with Town Square');
+        expect(within(sectionHead()).queryByRole('button')).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', {name: /New/})).not.toBeInTheDocument();
+    });
+
+    test('in a direct message, its notes are shared with "this conversation"', async () => {
+        mocked.createDoc.mockResolvedValue({...note, id: 'n2', channel_id: 'd1'});
+        renderApp({channel: {id: 'd1', type: 'D', display_name: 'bob', name: 'me__bob', delete_at: 0} as Channel});
+        expect(await panel().findByText('Every member of the conversation can edit the notes added here.')).toBeInTheDocument();
+        expect(sectionHead()).toHaveTextContent('Shared with this conversation');
+        fireEvent.click(within(sectionHead()).getByRole('button', {name: 'New note in this conversation'}));
+        expect(mocked.createDoc).toHaveBeenCalledWith('', 'd1');
+        expect(await header().findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
+    });
+
+    test('lists the notes under the header row, with the + still in it', async () => {
+        mocked.listDocs.mockImplementation((channelId?: string) => Promise.resolve(channelId ? [note] : []));
+        renderApp();
+        const row = (await panel().findByText('Plan')).closest('button') as HTMLElement;
+        expect(sectionHead().nextElementSibling).toBe(row);
+        expect(within(sectionHead()).getByRole('button', {name: 'New note in this channel'})).toBeInTheDocument();
+        expect(panel().queryByText('No notes here yet')).not.toBeInTheDocument();
     });
 });
 
@@ -225,7 +255,8 @@ describe('an open note', () => {
 
         fireEvent.click(await header().findByRole('button', {name: 'All notes'}));
         expect(header().getByText('Notes')).toBeInTheDocument();
-        expect(await header().findByRole('button', {name: 'New note in this channel'})).toBeInTheDocument();
+        expect(await panel().findByText('No notes here yet')).toBeInTheDocument();
+        expect(panel().getByRole('button', {name: 'New note in this channel'})).toBeInTheDocument();
         expect(panel().queryByTestId('editor')).not.toBeInTheDocument();
     });
 

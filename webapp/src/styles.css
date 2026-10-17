@@ -8,8 +8,8 @@
 :is(.am-app, .am-layer) .sidebar-right__body:has(> .am-notes-root) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 :is(.am-app, .am-layer) .am-notes-root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 :is(.am-app, .am-layer) .am-notes-root > .am-app-panel { overflow-y: auto; }
-/* The app's header is the panel's (NotesHeader): its title over the list, with the new note button, and the open
-   note's back button, title and actions in its place. */
+/* The app's header is the panel's (NotesHeader): its title over the list (whose new note button is in the header
+   row of its view), and the open note's back button, title and actions in its place. */
 :is(.am-app, .am-layer) .am-notes-head { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; }
 :is(.am-app, .am-layer) .am-notes-head-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 :is(.am-app, .am-layer) .am-notes-head-slot { display: flex; align-items: center; gap: 2px; min-width: 0; }

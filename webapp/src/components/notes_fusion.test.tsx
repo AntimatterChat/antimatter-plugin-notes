@@ -96,22 +96,22 @@ const setWebUI = (ui?: 'classic' | 'fusion') => {
     }
 };
 
-function store() {
+function store(channel: Channel = townSquare) {
     const state = {
         entities: {
             general: {config: {}, license: {}},
             preferences: {myPreferences: {}},
             users: {currentUserId: 'me', profiles: {me: {id: 'me', username: 'maya'}}, statuses: {}, profilesInChannel: {}},
-            channels: {currentChannelId: 'c1', channels: {c1: townSquare}, myMembers: {}},
+            channels: {currentChannelId: channel.id, channels: {[channel.id]: channel}, myMembers: {}},
             teams: {currentTeamId: 't1', teams: {t1: {id: 't1', name: 'lumen'}}},
         },
     };
     return createStore(() => state);
 }
 
-function renderApp() {
+function renderApp(channel?: Channel) {
     render(
-        <Provider store={store()}>
+        <Provider store={store(channel)}>
             <IntlProvider locale='en'>
                 <div data-testid='panel-header'>
                     <NotesHeader/>
@@ -126,6 +126,7 @@ function renderApp() {
 
 const header = () => within(screen.getByTestId('panel-header'));
 const panel = () => within(screen.getByTestId('panel'));
+const sectionHead = () => within(screen.getByTestId('notes-section-head'));
 const titled = () => Array.from(document.querySelectorAll('[data-testid="panel-header"] [title], [data-testid="panel"] [title]'));
 
 let layer: HTMLElement;
@@ -196,13 +197,13 @@ describe('deleting a note under Fusion', () => {
 });
 
 describe('tooltips under Fusion', () => {
-    test("the list's buttons and tabs give Fusion's tooltips, and no browser tooltips", async () => {
+    test("the list's + gives Fusion's tooltip, and nothing a browser tooltip", async () => {
         renderApp();
 
-        const add = await header().findByRole('button', {name: 'New note in this channel'});
+        await panel().findByText('No notes here yet');
+        const add = sectionHead().getByRole('button', {name: 'New note in this channel'});
         expect(add).toHaveAttribute('data-am-tip', 'New note in this channel');
-        expect(panel().getByRole('tab', {name: 'This channel'})).toHaveAttribute('data-am-tip', 'Shared with Town Square');
-        expect(panel().getByRole('tab', {name: 'Mine'})).toHaveAttribute('data-am-tip', 'Personal notes');
+        expect(header().queryByRole('button')).toBeNull();
         expect(titled()).toEqual([]);
     });
 
@@ -221,7 +222,7 @@ describe('tooltips under Fusion', () => {
         setWebUI('classic');
         renderApp();
 
-        const add = await header().findByRole('button', {name: 'New note in this channel'});
+        const add = await panel().findByRole('button', {name: 'New note in this channel'});
         expect(add).toHaveAttribute('title', 'New note in this channel');
         expect(add).not.toHaveAttribute('data-am-tip');
         expect(document.querySelector('[data-am-tip]')).toBeNull();
@@ -238,6 +239,7 @@ describe('empty states under Fusion', () => {
         expect(empty).toHaveClass('am-empty', 'amfx-empty');
         expect(empty.querySelector('.amfx-empty-ic use')).toHaveAttribute('href', '#am-i-pad');
         expect(within(empty).getByText('Every member of the channel can edit the notes added here.')).toBeInTheDocument();
+        expect(within(empty).getByRole('button', {name: 'New note in this channel'})).toHaveClass('am-btn', 'am-primary');
         fireEvent.click(within(empty).getByRole('button', {name: 'New note in this channel'}));
         await waitFor(() => expect(mocked.createDoc).toHaveBeenCalledWith('', 'c1'));
     });
@@ -290,12 +292,20 @@ describe('empty states under Fusion', () => {
         expect(text.closest('[data-empty-state]')).toHaveClass('am-empty', 'amfx-empty', 'amfx-danger');
     });
 
-    test('the classic UI keeps its own empty state', async () => {
+    test('an archived channel offers no action', async () => {
+        renderApp({...townSquare, delete_at: 5});
+        const title = await panel().findByText('No notes here yet');
+        expect(within(title.closest('[data-empty-state]') as HTMLElement).queryByRole('button')).toBeNull();
+    });
+
+    test('the classic UI keeps its own empty state, the + only in the header row', async () => {
         setWebUI('classic');
         renderApp();
         const title = await panel().findByText('No notes here yet');
         expect(title.closest('[data-empty-state]')).toHaveClass('amn-notes-empty');
         expect(title.closest('[data-empty-state]')).not.toHaveClass('am-empty');
+        expect(within(title.closest('[data-empty-state]') as HTMLElement).queryByRole('button')).toBeNull();
+        expect(panel().getAllByRole('button', {name: 'New note in this channel'})).toHaveLength(1);
     });
 });
 
