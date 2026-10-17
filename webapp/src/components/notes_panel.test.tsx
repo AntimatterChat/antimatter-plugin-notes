@@ -210,6 +210,7 @@ describe('in the main window', () => {
         fireEvent.click(header().getByRole('button', {name: 'Note actions'}));
         fireEvent.click(screen.getByRole('menuitem', {name: 'Version history'}));
         expect(setPanelState).toHaveBeenLastCalledWith('note/n2/history');
+        expect(await panel().findByText(/No past versions yet/)).toBeInTheDocument();
     });
 
     test('without the host props (the classic UI), it opens on its list as before', async () => {
