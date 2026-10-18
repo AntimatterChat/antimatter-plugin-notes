@@ -110,6 +110,9 @@ function renderApp({channel = townSquare}: {channel?: Channel | null} = {}) {
 
 // The open note's toolbar, at the top of the panel; the list has none.
 const header = () => within(screen.getByTestId('notes-toolbar'));
+
+// The toolbar once it shows (a note opens after it loads).
+const toolbar = async () => within(await screen.findByTestId('notes-toolbar'));
 const noToolbar = () => expect(screen.queryByTestId('notes-toolbar')).not.toBeInTheDocument();
 
 // The header row of the list's view, under its tabs
@@ -152,7 +155,7 @@ describe('the list', () => {
         expect(mocked.createDoc).toHaveBeenCalledWith('', 'c1');
 
         // The new note opens, its title in its toolbar
-        expect(await header().findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
+        expect(await (await toolbar()).findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
     });
 
     test('adds a personal note from your notes, none from the favorites', async () => {
@@ -165,7 +168,7 @@ describe('the list', () => {
         expect(mocked.createDoc).toHaveBeenCalledWith('', '');
 
         // The new note opens; back to the list
-        fireEvent.click(await header().findByRole('button', {name: 'All notes'}));
+        fireEvent.click(await (await toolbar()).findByRole('button', {name: 'All notes'}));
         fireEvent.click(panel().getByRole('tab', {name: 'Favourites'}));
         expect(await panel().findByText('Star a note to find it here, wherever it is.')).toBeInTheDocument();
         expect(sectionHead()).toHaveTextContent('Favourites');
@@ -188,7 +191,7 @@ describe('the list', () => {
         expect(sectionHead()).toHaveTextContent('Shared with this conversation');
         fireEvent.click(within(sectionHead()).getByRole('button', {name: 'New note in this conversation'}));
         expect(mocked.createDoc).toHaveBeenCalledWith('', 'd1');
-        expect(await header().findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
+        expect(await (await toolbar()).findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
     });
 
     test('lists the notes under the header row, with the + still in it', async () => {
@@ -206,7 +209,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        const title = await header().findByRole('textbox', {name: 'Title'});
+        const title = await (await toolbar()).findByRole('textbox', {name: 'Title'});
         expect(title).toHaveValue('Plan');
         expect(header().getByRole('button', {name: 'All notes'})).toBeInTheDocument();
         expect(header().getByRole('img', {name: 'Shared with everyone in ~Town Square'})).toBeInTheDocument();
@@ -216,8 +219,8 @@ describe('an open note', () => {
         // Once, in the panel, over the editor and its toolbar's row
         expect(panel().getAllByRole('textbox', {name: 'Title'})).toHaveLength(1);
         expect(panel().getAllByRole('button', {name: 'All notes'})).toHaveLength(1);
-        const toolbar = screen.getByTestId('notes-toolbar');
-        expect(toolbar.compareDocumentPosition(panel().getByTestId('editor')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        const bar = screen.getByTestId('notes-toolbar');
+        expect(bar.compareDocumentPosition(panel().getByTestId('editor')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         expect(panel().getByTestId('editor')).toHaveAttribute('data-editable', 'true');
         expect(within(panel().getByTestId('editor')).getByRole('status')).toHaveTextContent('Saved');
     });
@@ -226,7 +229,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        const title = await header().findByRole('textbox', {name: 'Title'});
+        const title = await (await toolbar()).findByRole('textbox', {name: 'Title'});
         focus(title);
         fireEvent.change(title, {target: {value: 'Plan for Q4'}});
         fireEvent.keyDown(title, {key: 'Enter'});
@@ -237,7 +240,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        fireEvent.click(await header().findByRole('button', {name: 'Add to favourites'}));
+        fireEvent.click(await (await toolbar()).findByRole('button', {name: 'Add to favourites'}));
         expect(mocked.setFavorite).toHaveBeenCalledWith('n1', true);
         expect(header().getByRole('button', {name: 'Remove from favourites'})).toHaveAttribute('aria-pressed', 'true');
     });
@@ -246,7 +249,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        fireEvent.click(await header().findByRole('button', {name: 'All notes'}));
+        fireEvent.click(await (await toolbar()).findByRole('button', {name: 'All notes'}));
         noToolbar();
         expect(await panel().findByText('No notes here yet')).toBeInTheDocument();
         expect(panel().getByRole('button', {name: 'New note in this channel'})).toBeInTheDocument();
@@ -257,7 +260,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        const actions = await header().findByRole('button', {name: 'Note actions'});
+        const actions = await (await toolbar()).findByRole('button', {name: 'Note actions'});
         fireEvent.click(actions);
         const menu = screen.getByRole('menu', {name: 'Note actions'});
         expect(screen.getByTestId('notes-toolbar')).not.toContainElement(menu);
@@ -279,7 +282,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        fireEvent.click(await header().findByRole('button', {name: 'Note actions'}));
+        fireEvent.click(await (await toolbar()).findByRole('button', {name: 'Note actions'}));
         fireEvent.click(screen.getByRole('menuitem', {name: 'Version history'}));
         expect(header().getByText('Versions of Plan')).toBeInTheDocument();
         expect(header().queryByRole('textbox', {name: 'Title'})).not.toBeInTheDocument();
@@ -296,7 +299,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        fireEvent.click(await header().findByRole('button', {name: 'Note actions'}));
+        fireEvent.click(await (await toolbar()).findByRole('button', {name: 'Note actions'}));
         fireEvent.click(screen.getByRole('menuitem', {name: 'Delete'}));
 
         // The classic UI keeps the browser's confirmation
@@ -311,7 +314,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        expect(await header().findByRole('textbox', {name: 'Title'})).toHaveAttribute('readonly');
+        expect(await (await toolbar()).findByRole('textbox', {name: 'Title'})).toHaveAttribute('readonly');
         expect(panel().getByTestId('editor')).toHaveAttribute('data-editable', 'false');
         expect(within(panel().getByTestId('editor')).getByRole('status')).toHaveTextContent('Read only');
     });
@@ -321,7 +324,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        expect(await header().findByRole('img', {name: 'Personal: only you can see it'})).toBeInTheDocument();
+        expect(await (await toolbar()).findByRole('img', {name: 'Personal: only you can see it'})).toBeInTheDocument();
     });
 
     test("is in the panel whatever the host's header: its toolbar tops the panel", async () => {
@@ -347,7 +350,7 @@ describe('an open note', () => {
         setOpenDoc('n1');
         renderApp();
 
-        const back = await header().findByRole('button', {name: 'All notes'});
+        const back = await (await toolbar()).findByRole('button', {name: 'All notes'});
         expect(back.querySelectorAll('svg, i, img')).toHaveLength(1);
     });
 });

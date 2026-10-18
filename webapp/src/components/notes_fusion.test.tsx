@@ -122,6 +122,9 @@ function renderApp(channel?: Channel) {
 
 // The open note's toolbar, at the top of the panel; the list has none.
 const header = () => within(screen.getByTestId('notes-toolbar'));
+
+// The toolbar once it shows (a note opens after it loads).
+const toolbar = async () => within(await screen.findByTestId('notes-toolbar'));
 const noToolbar = () => expect(screen.queryByTestId('notes-toolbar')).not.toBeInTheDocument();
 const panel = () => within(screen.getByTestId('panel'));
 const sectionHead = () => within(screen.getByTestId('notes-section-head'));
@@ -156,7 +159,7 @@ describe('deleting a note under Fusion', () => {
         setOpenDoc('n1');
         renderApp();
 
-        fireEvent.click(await header().findByRole('button', {name: 'Note actions'}));
+        fireEvent.click(await (await toolbar()).findByRole('button', {name: 'Note actions'}));
         fireEvent.click(screen.getByRole('menuitem', {name: 'Delete'}));
         let dialog = await screen.findByRole('alertdialog', {name: 'Delete "Plan"?'});
         expect(layer).toContainElement(dialog);
@@ -186,7 +189,7 @@ describe('deleting a note under Fusion', () => {
         setOpenDoc('n1');
         renderApp();
 
-        fireEvent.click(await header().findByRole('button', {name: 'Note actions'}));
+        fireEvent.click(await (await toolbar()).findByRole('button', {name: 'Note actions'}));
         fireEvent.click(screen.getByRole('menuitem', {name: 'Delete'}));
         const dialog = await screen.findByRole('alertdialog', {name: 'Delete this note?'});
         fireEvent.click(within(dialog).getByRole('button', {name: 'Cancel'}));
@@ -209,7 +212,7 @@ describe('tooltips under Fusion', () => {
         setOpenDoc('n1');
         renderApp();
 
-        expect(await header().findByRole('button', {name: 'Note actions'})).toHaveAttribute('data-am-tip', 'Note actions');
+        expect(await (await toolbar()).findByRole('button', {name: 'Note actions'})).toHaveAttribute('data-am-tip', 'Note actions');
         expect(header().getByRole('button', {name: 'All notes'})).toHaveAttribute('data-am-tip', 'All notes');
         expect(header().getByRole('button', {name: 'Add to favourites'})).toHaveAttribute('data-am-tip', 'Add to favourites');
         expect(header().getByRole('img', {name: 'Shared with everyone in ~Town Square'})).toHaveAttribute('data-am-tip', 'Shared with everyone in ~Town Square');
@@ -275,7 +278,7 @@ describe('empty states under Fusion', () => {
     test('the versions of a note that has none', async () => {
         setOpenDoc('n1');
         renderApp();
-        fireEvent.click(await header().findByRole('button', {name: 'Note actions'}));
+        fireEvent.click(await (await toolbar()).findByRole('button', {name: 'Note actions'}));
         fireEvent.click(screen.getByRole('menuitem', {name: 'Version history'}));
         const title = await panel().findByText('No past versions yet');
         expect(title.closest('[data-empty-state]')).toHaveClass('am-empty', 'amfx-empty');

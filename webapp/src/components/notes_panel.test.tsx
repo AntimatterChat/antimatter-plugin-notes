@@ -116,6 +116,9 @@ function renderApp(props: {initialPanelState?: string} = {}) {
 
 // The open note's toolbar, at the top of the panel; the list has none.
 const header = () => within(screen.getByTestId('notes-toolbar'));
+
+// The toolbar once it shows (a note opens after it loads).
+const toolbar = async () => within(await screen.findByTestId('notes-toolbar'));
 const noToolbar = () => expect(screen.queryByTestId('notes-toolbar')).not.toBeInTheDocument();
 const panel = () => within(screen.getByTestId('panel'));
 
@@ -133,7 +136,7 @@ describe('in the window it was popped out into', () => {
     test('the panel starts at the note it showed, fetched again', async () => {
         const setPanelState = renderApp({initialPanelState: 'note/n1'});
 
-        expect(await header().findByRole('textbox', {name: 'Title'})).toHaveValue('Plan');
+        expect(await (await toolbar()).findByRole('textbox', {name: 'Title'})).toHaveValue('Plan');
         expect(mocked.getDoc).toHaveBeenCalledWith('n1');
         expect(panel().getByTestId('editor')).toBeInTheDocument();
 
@@ -146,7 +149,7 @@ describe('in the window it was popped out into', () => {
     test("the panel starts at the note's versions", async () => {
         const setPanelState = renderApp({initialPanelState: 'note/n1/history'});
 
-        expect(await header().findByText('Versions of Plan')).toBeInTheDocument();
+        expect(await (await toolbar()).findByText('Versions of Plan')).toBeInTheDocument();
         expect(await panel().findByText(/No past versions yet/)).toBeInTheDocument();
         expect(mocked.getVersions).toHaveBeenCalledWith('n1');
         expect(setPanelState).toHaveBeenLastCalledWith('note/n1/history');
@@ -202,7 +205,7 @@ describe('in the main window', () => {
         mocked.createDoc.mockResolvedValue({...note, id: 'n2', channel_id: ''});
         mocked.getDoc.mockResolvedValue({...note, id: 'n2', channel_id: ''});
         fireEvent.click(await panel().findByRole('button', {name: 'New personal note'}));
-        expect(await header().findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
+        expect(await (await toolbar()).findByRole('textbox', {name: 'Title'})).toBeInTheDocument();
         expect(setPanelState).toHaveBeenLastCalledWith('note/n2');
 
         fireEvent.click(header().getByRole('button', {name: 'Note actions'}));
