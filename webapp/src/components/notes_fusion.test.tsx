@@ -215,7 +215,7 @@ describe('tooltips under Fusion', () => {
         expect(await (await toolbar()).findByRole('button', {name: 'Note actions'})).toHaveAttribute('data-am-tip', 'Note actions');
         expect(header().getByRole('button', {name: 'All notes'})).toHaveAttribute('data-am-tip', 'All notes');
         expect(header().getByRole('button', {name: 'Add to favourites'})).toHaveAttribute('data-am-tip', 'Add to favourites');
-        expect(header().getByRole('img', {name: 'Shared with everyone in ~Town Square'})).toHaveAttribute('data-am-tip', 'Shared with everyone in ~Town Square');
+        expect(header().getByRole('img', {name: 'Shared with everyone in #Town Square'})).toHaveAttribute('data-am-tip', 'Shared with everyone in #Town Square');
         expect(titled()).toEqual([]);
     });
 

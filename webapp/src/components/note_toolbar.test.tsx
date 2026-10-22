@@ -212,7 +212,7 @@ describe('an open note', () => {
         const title = await (await toolbar()).findByRole('textbox', {name: 'Title'});
         expect(title).toHaveValue('Plan');
         expect(header().getByRole('button', {name: 'All notes'})).toBeInTheDocument();
-        expect(header().getByRole('img', {name: 'Shared with everyone in ~Town Square'})).toBeInTheDocument();
+        expect(header().getByRole('img', {name: 'Shared with everyone in #Town Square'})).toBeInTheDocument();
         expect(header().getByRole('button', {name: 'Add to favourites'})).toBeInTheDocument();
         expect(header().getByRole('button', {name: 'Note actions'})).toBeInTheDocument();
 

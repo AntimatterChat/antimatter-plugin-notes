@@ -252,7 +252,7 @@ export default function NoteEditor({docId, initialView = 'edit', onViewChange}: 
     if (!doc.channel_id && currentChannel && !currentChannel.delete_at) {
         items.splice(1, 0, {
             icon: 'forward',
-            label: conversation ? intl.formatMessage({id: 'notes.menu.move_conversation', defaultMessage: 'Share in this conversation'}) : intl.formatMessage({id: 'notes.menu.move', defaultMessage: 'Share in ~{channel}'}, {channel: currentChannel.display_name}),
+            label: conversation ? intl.formatMessage({id: 'notes.menu.move_conversation', defaultMessage: 'Share in this conversation'}) : intl.formatMessage({id: 'notes.menu.move', defaultMessage: 'Share in #{channel}'}, {channel: currentChannel.display_name}),
             onClick: async () => {
                 try {
                     setDoc(await client.moveDoc(doc.id, currentChannel.id));

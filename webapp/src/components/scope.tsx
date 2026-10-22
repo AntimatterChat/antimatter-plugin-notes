@@ -38,7 +38,7 @@ export default function ScopeChip({doc, compact = false}: {doc: Doc; compact?: b
     }
     const conversation = channel?.type === 'D' || channel?.type === 'G';
     const name = conversation ? intl.formatMessage({id: 'notes.scope.conversation', defaultMessage: 'Conversation'}) : channel?.display_name || '';
-    const tipText = conversation ? intl.formatMessage({id: 'notes.scope.conversation_tip', defaultMessage: 'Shared with everyone in this conversation'}) : intl.formatMessage({id: 'notes.scope.shared_tip', defaultMessage: 'Shared with everyone in ~{channel}'}, {channel: name});
+    const tipText = conversation ? intl.formatMessage({id: 'notes.scope.conversation_tip', defaultMessage: 'Shared with everyone in this conversation'}) : intl.formatMessage({id: 'notes.scope.shared_tip', defaultMessage: 'Shared with everyone in #{channel}'}, {channel: name});
     return (
         <span
             className={cx('notes-scope', 'notes-scope-shared', compact && 'notes-scope-compact')}
